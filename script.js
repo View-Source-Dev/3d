@@ -11,6 +11,7 @@ const site = document.querySelector(".site");
 const stackProjectName = document.querySelector("#stackProjectName");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
+const clockNodes = Array.from(document.querySelectorAll("[data-clock]"));
 const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 const stillAssets = [
@@ -91,6 +92,22 @@ function shuffle(list) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function updateWorldClocks() {
+  clockNodes.forEach((node) => {
+    const zone = node.dataset.clock;
+    if (!zone) {
+      return;
+    }
+
+    node.textContent = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: zone,
+    }).format(new Date());
+  });
 }
 
 function buildVimeoSrc(vimeoId) {
@@ -730,6 +747,8 @@ if ("scrollRestoration" in window.history) {
 }
 
 runIntro();
+updateWorldClocks();
+window.setInterval(updateWorldClocks, 30000);
 window.scrollTo(0, 0);
 currentStackProgress = 0;
 stackTargetProgress = 0;
