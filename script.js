@@ -626,12 +626,12 @@ function updateStackFromScroll() {
   }
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
-  if (scrollY > stackStartOffset + (stackMaxProgress * viewportHeight)) {
-    window.scrollTo(0, stackStartOffset + (stackMaxProgress * viewportHeight));
+  if (scrollY > stackStartOffset + (stackMaxProgress * window.innerHeight)) {
+    window.scrollTo(0, stackStartOffset + (stackMaxProgress * window.innerHeight));
     return;
   }
   const local = scrollY - stackStartOffset;
-  const rawProgress = local / Math.max(1, viewportHeight);
+  const rawProgress = local / Math.max(1, window.innerHeight);
   stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
   queueStackMotion();
 
@@ -650,9 +650,9 @@ function snapToNearestSlide() {
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
+  const progress = clamp(local / Math.max(1, window.innerHeight), 0, stackMaxProgress);
   const targetIndex = Math.round(progress);
-  const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
+  const targetScroll = stackStartOffset + (targetIndex * window.innerHeight);
 
   if (Math.abs(targetScroll - scrollY) < 1) {
     return;
@@ -666,7 +666,7 @@ function snapToNearestSlide() {
 }
 
 function updateVimeoScale() {
-  const viewportAspect = window.innerWidth / Math.max(1, viewportHeight);
+  const viewportAspect = window.innerWidth / Math.max(1, window.innerHeight);
   const baseAspect = 16 / 9;
   const scale = Math.max(viewportAspect / baseAspect, baseAspect / viewportAspect);
   vimeoScale = Math.max(1, scale);

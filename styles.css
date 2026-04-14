@@ -290,19 +290,19 @@ a {
 .stack {
   padding: 0;
   position: relative;
-  min-height: var(--stack-screen-height);
+  min-height: 100vh;
   padding-bottom: 0;
 }
 
 .stack-pin {
   position: sticky;
   top: 0;
-  height: var(--stack-screen-height);
+  height: 100vh;
   overflow: hidden;
 }
 
 .stack-spacer {
-  height: calc(var(--stack-count, 1) * var(--stack-screen-height));
+  height: calc(var(--stack-count, 1) * 100vh);
 }
 
 .stack-stage {
@@ -407,7 +407,7 @@ a {
   inset: 0;
   top: 0;
   width: 100%;
-  height: var(--stack-screen-height);
+  height: 100vh;
   overflow: hidden;
   background: #000;
   transform: translate3d(0, var(--stack-y, 100%), 0);
@@ -588,7 +588,7 @@ a {
   }
 
   .stack-card {
-    height: var(--stack-screen-height);
+    height: 100vh;
   }
 
   .clock-bar-inner {
