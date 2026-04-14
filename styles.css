@@ -680,7 +680,7 @@ a {
     inset: auto;
     top: auto;
     height: auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 1 / 1;
     border-radius: 1rem;
     transform: none;
     transition: none;
@@ -697,27 +697,13 @@ a {
   }
 
   .clock-bar {
-    padding-left: var(--page-pad);
-    padding-right: var(--page-pad);
+    display: none;
   }
+}
 
-  .clock-bar-inner {
-    width: min(100%, 24rem);
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.5rem 0.8rem;
-  }
-
-  .clock-chip {
-    gap: 0.35rem;
-  }
-
-  .clock-city {
-    font-size: 0.64rem;
-  }
-
-  .clock-time {
-    font-size: 0.8rem;
+@media (max-width: 1023px) {
+  .clock-bar {
+    display: none;
   }
 }
 
