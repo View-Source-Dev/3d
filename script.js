@@ -73,6 +73,7 @@ let stackStartOffset = 0;
 let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
+<<<<<<< HEAD
 let viewportHeight = window.innerHeight || 1;
 let useLinearMobileLayout = false;
 let linearObserver = null;
@@ -80,6 +81,8 @@ let linearObserver = null;
 const INITIAL_PRELOAD_COUNT = 2;
 const FORWARD_PRELOAD_COUNT = 4;
 const VIDEO_START_OFFSET_SECONDS = 0.5;
+=======
+>>>>>>> parent of d81a6f8 (Update script.js)
 
 function shuffle(list) {
   const copy = [...list];
@@ -125,6 +128,7 @@ function buildVimeoSrc(vimeoId) {
     api: "1",
   });
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
+<<<<<<< HEAD
 }
 
 function syncViewportHeight() {
@@ -234,6 +238,8 @@ function applyLayoutMode() {
     linearObserver?.disconnect();
     linearObserver = null;
   }
+=======
+>>>>>>> parent of d81a6f8 (Update script.js)
 }
 
 function setupLoaderBuckets() {
@@ -389,6 +395,7 @@ function buildStack() {
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
+<<<<<<< HEAD
     iframe.dataset.startOffsetApplied = "false";
     iframe.dataset.shouldPlay = index < 2 ? "true" : "false";
     iframe.addEventListener("load", () => {
@@ -401,8 +408,10 @@ function buildStack() {
       }, 240);
     });
     if (index < INITIAL_PRELOAD_COUNT) {
+=======
+    if (index < 2) {
+>>>>>>> parent of d81a6f8 (Update script.js)
       iframe.src = iframe.dataset.src;
-      iframe.loading = "eager";
     }
 
     card.appendChild(iframe);
@@ -574,6 +583,7 @@ function updateStackMotion() {
     const prevIndex = Math.max(0, currentIndex - 1);
     const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
     const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
+<<<<<<< HEAD
     const shouldPlay = index === currentIndex || index === nextIndex;
     if (shouldLoad) {
       ensureFrameLoaded(frame);
@@ -585,12 +595,24 @@ function updateStackMotion() {
       }
     } else if (frame.src) {
       setFramePlaying(frame, false);
+=======
+    if (shouldLoad) {
+      if (!frame.src && frame.dataset.src) {
+        frame.src = frame.dataset.src;
+        frame.loading = "eager";
+      }
+      frame.removeAttribute("data-paused");
+    } else if (frame.src) {
+>>>>>>> parent of d81a6f8 (Update script.js)
       frame.removeAttribute("src");
       frame.setAttribute("data-paused", "true");
     }
   });
+<<<<<<< HEAD
 
   preloadFramesThrough(Math.min(nextIndex + 1, cardCount - 1));
+=======
+>>>>>>> parent of d81a6f8 (Update script.js)
 }
 
 function stepStackMotion() {
@@ -740,8 +762,11 @@ function runIntro() {
 buildStack();
 stackMaxProgress = Math.max(0, slides.length - 1);
 document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
+<<<<<<< HEAD
 syncViewportHeight();
 applyLayoutMode();
+=======
+>>>>>>> parent of d81a6f8 (Update script.js)
 updateVimeoScale();
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
