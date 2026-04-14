@@ -332,6 +332,9 @@ body.is-fixed-stack .stack-spacer {
   height: 100%;
   background: #000;
   z-index: 1;
+  perspective: 1800px;
+  perspective-origin: center center;
+  transform-style: preserve-3d;
 }
 
 .stack-overlay {
@@ -424,15 +427,18 @@ body.is-fixed-stack .stack-spacer {
 
 .stack-card {
   position: absolute;
-  inset: 0.75rem;
-  width: calc(100% - 1.5rem);
-  height: calc(var(--stack-screen-height) - 1.5rem);
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 1040px);
+  height: min(74vh, 820px);
   overflow: hidden;
   background: #000;
   will-change: transform, opacity;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
   border-radius: 1.15rem;
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+  transform-origin: center center;
+  backface-visibility: hidden;
 }
 
 .stack-card::after {
@@ -728,11 +734,14 @@ body.is-fixed-stack .stack-spacer {
     position: relative;
     inset: auto;
     top: auto;
+    left: auto;
     height: auto;
+    width: 100%;
     aspect-ratio: 1 / 1;
     border-radius: 1rem;
     overflow: hidden;
     transition: none;
+    box-shadow: none;
   }
 
   .stack-card iframe,

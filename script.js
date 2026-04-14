@@ -181,13 +181,16 @@ function updateDesktopCards(progress) {
     const distance = index - boundedProgress;
     const absDistance = Math.abs(distance);
     const direction = distance < 0 ? -1 : 1;
-    const slideAmount = Math.min(absDistance, 1.25);
-    const offsetX = direction * slideAmount * 92;
-    const scale = 1 - Math.min(absDistance, 1.5) * 0.08;
-    const opacity = clamp(1 - absDistance * 0.22, 0, 1);
-    const dim = clamp(absDistance * 0.12, 0, 0.26);
+    const spread = Math.min(absDistance, 3);
+    const offsetX = direction * Math.min(24 + spread * 20, 84);
+    const rotateY = direction * Math.min(16 + spread * 7, 34);
+    const scale = 1 - Math.min(absDistance, 2.5) * 0.09;
+    const depth = -Math.min(absDistance, 3) * 160;
+    const lift = Math.min(absDistance, 2) * 1.2;
+    const opacity = clamp(1 - absDistance * 0.16, 0.22, 1);
+    const dim = clamp(absDistance * 0.1, 0, 0.24);
 
-    card.style.transform = `translate3d(${offsetX}%, 0, 0) scale(${scale})`;
+    card.style.transform = `translate(-50%, -50%) translate3d(${offsetX}vw, ${lift}vh, ${depth}px) rotateY(${rotateY}deg) scale(${scale})`;
     card.style.opacity = `${opacity}`;
     card.style.zIndex = String(1000 - Math.round(absDistance * 100) - index);
     card.style.setProperty("--card-dim", `${dim}`);
