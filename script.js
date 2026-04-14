@@ -68,6 +68,7 @@ const state = {
   mobileObserver: null,
   desktopTouchActive: false,
   desktopTouchY: 0,
+  wheelDelta: 0,
 };
 
 function shuffle(list) {
@@ -251,13 +252,12 @@ function queueDesktopSnap() {
   state.snapTimer = window.setTimeout(snapDesktopProgress, 130);
 }
 
-function nudgeDesktopProgress(delta) {
+function goToDesktopIndex(index) {
   if (state.mode !== "desktop") {
     return;
   }
 
-  const nextProgress = clamp(state.targetProgress + delta, 0, slides.length - 1);
-  state.targetProgress = nextProgress;
+  state.targetProgress = clamp(index, 0, slides.length - 1);
   requestDesktopAnimation();
   queueDesktopSnap();
 }
@@ -268,8 +268,15 @@ function handleDesktopWheel(event) {
   }
 
   event.preventDefault();
-  const delta = event.deltaY / Math.max(window.innerHeight * 0.9, 1);
-  nudgeDesktopProgress(delta * 1.15);
+  state.wheelDelta += event.deltaY;
+
+  if (Math.abs(state.wheelDelta) < 42) {
+    return;
+  }
+
+  const direction = state.wheelDelta > 0 ? 1 : -1;
+  state.wheelDelta = 0;
+  goToDesktopIndex(state.activeIndex + direction);
 }
 
 function handleDesktopTouchStart(event) {
@@ -290,7 +297,14 @@ function handleDesktopTouchMove(event) {
   const deltaY = state.desktopTouchY - nextY;
   state.desktopTouchY = nextY;
   event.preventDefault();
-  nudgeDesktopProgress(deltaY / Math.max(window.innerHeight * 0.72, 1));
+
+  if (Math.abs(deltaY) < 6) {
+    return;
+  }
+
+  const direction = deltaY > 0 ? 1 : -1;
+  goToDesktopIndex(state.activeIndex + direction);
+  state.desktopTouchActive = false;
 }
 
 function handleDesktopTouchEnd() {
@@ -337,6 +351,7 @@ function applyDesktopLayout() {
   state.mode = "desktop";
   stack?.classList.remove("is-linear");
   document.body.classList.add("is-fixed-stack");
+  state.wheelDelta = 0;
   teardownMobileObserver();
   syncStackMetrics();
   state.targetProgress = clamp(state.targetProgress, 0, slides.length - 1);
