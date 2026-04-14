@@ -72,12 +72,12 @@ let stackStartOffset = 0;
 let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
-let preloadTimer = null;
-let preloadedUntilIndex = -1;
+let viewportHeight = window.innerHeight || 1;
+let useLinearMobileLayout = false;
+let linearObserver = null;
 
 const INITIAL_PRELOAD_COUNT = 4;
 const FORWARD_PRELOAD_COUNT = 4;
-const IDLE_PRELOAD_BATCH = 2;
 const VIDEO_START_OFFSET_SECONDS = 0.5;
 
 function shuffle(list) {
@@ -105,12 +105,31 @@ function buildVimeoSrc(vimeoId) {
     byline: "0",
     portrait: "0",
     dnt: "1",
+    api: "1",
   });
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}#t=${VIDEO_START_OFFSET_SECONDS}s`;
 }
 
+function syncViewportHeight() {
+  viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+  document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
+}
+
+function shouldUseLinearMobileLayout() {
+  return window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
+}
+
 function getStackFrames() {
   return Array.from(stackStage?.querySelectorAll("iframe") || []);
+}
+
+function postToVimeo(frame, method, value) {
+  if (!frame?.contentWindow) {
+    return;
+  }
+
+  const payload = value === undefined ? { method } : { method, value };
+  frame.contentWindow.postMessage(JSON.stringify(payload), "https://player.vimeo.com");
 }
 
 function ensureFrameLoaded(frame) {
@@ -122,40 +141,81 @@ function ensureFrameLoaded(frame) {
   frame.loading = "eager";
 }
 
+function setFramePlaying(frame, shouldPlay) {
+  if (!frame) {
+    return;
+  }
+
+  frame.dataset.shouldPlay = shouldPlay ? "true" : "false";
+  if (!frame.src) {
+    return;
+  }
+
+  if (shouldPlay) {
+    postToVimeo(frame, "play");
+  } else {
+    postToVimeo(frame, "pause");
+  }
+}
+
 function preloadFramesThrough(index) {
   const frames = getStackFrames();
   const maxIndex = Math.min(index, frames.length - 1);
 
-  for (let frameIndex = Math.max(0, preloadedUntilIndex + 1); frameIndex <= maxIndex; frameIndex += 1) {
+  for (let frameIndex = 0; frameIndex <= maxIndex; frameIndex += 1) {
     ensureFrameLoaded(frames[frameIndex]);
   }
-
-  preloadedUntilIndex = Math.max(preloadedUntilIndex, maxIndex);
 }
 
-function scheduleIdlePreload(startIndex = 0) {
-  if (preloadTimer) {
-    window.clearTimeout(preloadTimer);
-    preloadTimer = null;
+function setupLinearObserver() {
+  if (!stackStage) {
+    return;
   }
 
-  const frames = getStackFrames();
-  let cursor = Math.max(startIndex, preloadedUntilIndex + 1);
+  linearObserver?.disconnect();
+  linearObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const card = entry.target;
+      const frame = card.querySelector("iframe");
+      if (!frame) {
+        return;
+      }
 
-  const tick = () => {
-    const endIndex = Math.min(cursor + IDLE_PRELOAD_BATCH - 1, frames.length - 1);
-    preloadFramesThrough(endIndex);
-    cursor = endIndex + 1;
+      if (entry.isIntersecting) {
+        ensureFrameLoaded(frame);
+      }
 
-    if (cursor < frames.length) {
-      preloadTimer = window.setTimeout(tick, 220);
-    } else {
-      preloadTimer = null;
-    }
-  };
+      const shouldPlay = entry.isIntersecting && entry.intersectionRatio > 0.35;
+      setFramePlaying(frame, shouldPlay);
 
-  if (cursor < frames.length) {
-    preloadTimer = window.setTimeout(tick, 180);
+      if (shouldPlay) {
+        const cardIndex = Number(card.dataset.stackIndex || 0);
+        activeProjectIndex = cardIndex;
+        pendingProjectIndex = cardIndex;
+        ensureActiveProjectTitle();
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: "220px 0px",
+    threshold: [0, 0.35, 0.7],
+  });
+
+  stackStage.querySelectorAll(".stack-card").forEach((card) => {
+    linearObserver.observe(card);
+  });
+}
+
+function applyLayoutMode() {
+  useLinearMobileLayout = shouldUseLinearMobileLayout();
+  stack?.classList.toggle("is-linear", useLinearMobileLayout);
+
+  if (useLinearMobileLayout) {
+    preloadFramesThrough(Math.min(INITIAL_PRELOAD_COUNT - 1, slides.length - 1));
+    setupLinearObserver();
+  } else {
+    linearObserver?.disconnect();
+    linearObserver = null;
   }
 }
 
@@ -312,6 +372,17 @@ function buildStack() {
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
+    iframe.dataset.startOffsetApplied = "false";
+    iframe.dataset.shouldPlay = index < 2 ? "true" : "false";
+    iframe.addEventListener("load", () => {
+      window.setTimeout(() => {
+        if (iframe.dataset.startOffsetApplied !== "true") {
+          postToVimeo(iframe, "setCurrentTime", VIDEO_START_OFFSET_SECONDS);
+          iframe.dataset.startOffsetApplied = "true";
+        }
+        setFramePlaying(iframe, iframe.dataset.shouldPlay === "true");
+      }, 240);
+    });
     if (index < INITIAL_PRELOAD_COUNT) {
       iframe.src = iframe.dataset.src;
       iframe.loading = "eager";
@@ -423,6 +494,14 @@ function updateStackMotion() {
     return;
   }
 
+  if (useLinearMobileLayout) {
+    cards.forEach((card) => {
+      card.style.zIndex = "1";
+      card.style.setProperty("--stack-y", "0%");
+    });
+    return;
+  }
+
   const clampedProgress = clamp(currentStackProgress, 0, Math.max(0, cardCount - 1));
   const currentIndex = Math.floor(clampedProgress);
   const nextIndex = Math.min(currentIndex + 1, cardCount - 1);
@@ -478,10 +557,17 @@ function updateStackMotion() {
     const prevIndex = Math.max(0, currentIndex - 1);
     const forwardIndex = Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1);
     const shouldLoad = index >= prevIndex && index <= forwardIndex;
+    const shouldPlay = index === currentIndex || index === nextIndex;
     if (shouldLoad) {
       ensureFrameLoaded(frame);
-      frame.removeAttribute("data-paused");
+      setFramePlaying(frame, shouldPlay);
+      if (shouldPlay) {
+        frame.removeAttribute("data-paused");
+      } else {
+        frame.setAttribute("data-paused", "true");
+      }
     } else if (frame.src) {
+      setFramePlaying(frame, false);
       frame.setAttribute("data-paused", "true");
     }
   });
