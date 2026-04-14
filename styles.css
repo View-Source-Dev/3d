@@ -76,6 +76,18 @@ body.is-fixed-stack .site {
   overflow: hidden;
 }
 
+body.is-fixed-stack .stack-stage,
+body.is-fixed-stack .stack-card,
+body.is-fixed-stack .stack-card iframe,
+body.is-fixed-stack .stack-card video {
+  touch-action: none;
+}
+
+body.is-fixed-stack .stack-card iframe,
+body.is-fixed-stack .stack-card video {
+  pointer-events: none;
+}
+
 .site.is-visible {
   opacity: 1;
 }
@@ -651,6 +663,18 @@ body.is-fixed-stack .stack-spacer {
     height: auto;
     min-height: 100%;
     overflow: visible;
+  }
+
+  body.is-fixed-stack .stack-stage,
+  body.is-fixed-stack .stack-card,
+  body.is-fixed-stack .stack-card iframe,
+  body.is-fixed-stack .stack-card video {
+    touch-action: auto;
+  }
+
+  body.is-fixed-stack .stack-card iframe,
+  body.is-fixed-stack .stack-card video {
+    pointer-events: auto;
   }
 
   .stack-pin,
