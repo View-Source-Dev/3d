@@ -424,14 +424,15 @@ body.is-fixed-stack .stack-spacer {
 
 .stack-card {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: var(--stack-screen-height);
+  inset: 0.75rem;
+  width: calc(100% - 1.5rem);
+  height: calc(var(--stack-screen-height) - 1.5rem);
   overflow: hidden;
   background: #000;
   will-change: transform, opacity;
   transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
   border-radius: 1.15rem;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
 }
 
 .stack-card::after {

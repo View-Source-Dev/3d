@@ -180,12 +180,14 @@ function updateDesktopCards(progress) {
   state.cards.forEach((card, index) => {
     const distance = index - boundedProgress;
     const absDistance = Math.abs(distance);
-    const offset = distance * 72;
-    const scale = 1 - Math.min(absDistance, 1.6) * 0.1;
-    const opacity = clamp(1 - absDistance * 0.32, 0, 1);
-    const dim = clamp(absDistance * 0.14, 0, 0.32);
+    const direction = distance < 0 ? -1 : 1;
+    const slideAmount = Math.min(absDistance, 1.25);
+    const offsetX = direction * slideAmount * 92;
+    const scale = 1 - Math.min(absDistance, 1.5) * 0.08;
+    const opacity = clamp(1 - absDistance * 0.22, 0, 1);
+    const dim = clamp(absDistance * 0.12, 0, 0.26);
 
-    card.style.transform = `translate3d(0, ${offset}%, 0) scale(${scale})`;
+    card.style.transform = `translate3d(${offsetX}%, 0, 0) scale(${scale})`;
     card.style.opacity = `${opacity}`;
     card.style.zIndex = String(1000 - Math.round(absDistance * 100) - index);
     card.style.setProperty("--card-dim", `${dim}`);
