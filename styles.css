@@ -287,7 +287,7 @@ a {
   padding: 0;
   position: relative;
   min-height: 100vh;
-  padding-bottom: 7rem;
+  padding-bottom: 0;
 }
 
 .stack-pin {
@@ -550,33 +550,4 @@ a {
   html {
     scroll-behavior: auto;
   }
-}
-.contact-footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 30;
-  min-height: 3rem;
-  display: grid;
-  place-items: center;
-  gap: 0.2rem;
-  padding: 0.55rem 1.2rem 0.75rem;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.contact-footer a {
-  margin: 0;
-  font-size: clamp(0.95rem, 1.4vw, 1.2rem);
-  letter-spacing: 0.04em;
-  text-transform: none;
-  text-decoration: none;
-  color: #fff;
-}
-
-.contact-email {
-  font-weight: 600;
 }
