@@ -66,6 +66,8 @@ const state = {
   snapTimer: 0,
   resizeTimer: 0,
   mobileObserver: null,
+  desktopTouchActive: false,
+  desktopTouchY: 0,
 };
 
 function shuffle(list) {
@@ -178,10 +180,10 @@ function updateDesktopCards(progress) {
   state.cards.forEach((card, index) => {
     const distance = index - boundedProgress;
     const absDistance = Math.abs(distance);
-    const offset = distance * 82;
-    const scale = 1 - Math.min(absDistance, 1.8) * 0.11;
-    const opacity = clamp(1 - absDistance * 0.42, 0, 1);
-    const dim = clamp(absDistance * 0.18, 0, 0.4);
+    const offset = distance * 72;
+    const scale = 1 - Math.min(absDistance, 1.6) * 0.1;
+    const opacity = clamp(1 - absDistance * 0.32, 0, 1);
+    const dim = clamp(absDistance * 0.14, 0, 0.32);
 
     card.style.transform = `translate3d(0, ${offset}%, 0) scale(${scale})`;
     card.style.opacity = `${opacity}`;
@@ -226,46 +228,68 @@ function getDesktopTravel() {
 function syncStackMetrics() {
   const viewportHeight = window.innerHeight;
   document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
-  stack?.style.setProperty("--stack-travel", `${Math.max((slides.length - 1) * viewportHeight, 0)}px`);
 }
 
-function updateDesktopProgress() {
-  if (!stack) {
+function snapDesktopProgress() {
+  if (state.mode !== "desktop") {
     return;
   }
-
-  const stackTop = stack.getBoundingClientRect().top + window.scrollY;
-  const travel = getDesktopTravel();
-  const offset = clamp(window.scrollY - stackTop, 0, travel);
-  state.targetProgress = clamp(offset / window.innerHeight, 0, slides.length - 1);
+  state.targetProgress = clamp(Math.round(state.targetProgress), 0, slides.length - 1);
   requestDesktopAnimation();
 }
 
-function snapDesktopScroll() {
-  if (state.mode !== "desktop" || !stack) {
+function queueDesktopSnap() {
+  if (state.mode !== "desktop") {
     return;
   }
-
-  const stackTop = stack.getBoundingClientRect().top + window.scrollY;
-  const travel = getDesktopTravel();
-  const offset = clamp(window.scrollY - stackTop, 0, travel);
-  const nearestIndex = clamp(Math.round(offset / window.innerHeight), 0, slides.length - 1);
-  const snapTarget = stackTop + nearestIndex * window.innerHeight;
-
-  window.scrollTo({
-    top: snapTarget,
-    behavior: "smooth",
-  });
+  window.clearTimeout(state.snapTimer);
+  state.snapTimer = window.setTimeout(snapDesktopProgress, 130);
 }
 
-function handleDesktopScroll() {
+function nudgeDesktopProgress(delta) {
   if (state.mode !== "desktop") {
     return;
   }
 
-  window.clearTimeout(state.snapTimer);
-  updateDesktopProgress();
-  state.snapTimer = window.setTimeout(snapDesktopScroll, 110);
+  const nextProgress = clamp(state.targetProgress + delta, 0, slides.length - 1);
+  state.targetProgress = nextProgress;
+  requestDesktopAnimation();
+  queueDesktopSnap();
+}
+
+function handleDesktopWheel(event) {
+  if (state.mode !== "desktop") {
+    return;
+  }
+
+  event.preventDefault();
+  const delta = event.deltaY / Math.max(window.innerHeight * 0.9, 1);
+  nudgeDesktopProgress(delta * 1.15);
+}
+
+function handleDesktopTouchStart(event) {
+  if (state.mode !== "desktop" || event.touches.length !== 1) {
+    return;
+  }
+
+  state.desktopTouchActive = true;
+  state.desktopTouchY = event.touches[0].clientY;
+}
+
+function handleDesktopTouchMove(event) {
+  if (state.mode !== "desktop" || !state.desktopTouchActive || event.touches.length !== 1) {
+    return;
+  }
+
+  const nextY = event.touches[0].clientY;
+  const deltaY = state.desktopTouchY - nextY;
+  state.desktopTouchY = nextY;
+  event.preventDefault();
+  nudgeDesktopProgress(deltaY / Math.max(window.innerHeight * 0.72, 1));
+}
+
+function handleDesktopTouchEnd() {
+  state.desktopTouchActive = false;
 }
 
 function teardownMobileObserver() {
@@ -307,15 +331,20 @@ function setupMobileObserver() {
 function applyDesktopLayout() {
   state.mode = "desktop";
   stack?.classList.remove("is-linear");
+  document.body.classList.add("is-fixed-stack");
   teardownMobileObserver();
   syncStackMetrics();
-  updateDesktopProgress();
+  state.targetProgress = clamp(state.targetProgress, 0, slides.length - 1);
+  state.currentProgress = clamp(state.currentProgress, 0, slides.length - 1);
+  updateDesktopCards(state.currentProgress);
+  requestDesktopAnimation();
   syncPlaybackWindow(state.activeIndex);
 }
 
 function applyMobileLayout() {
   state.mode = "mobile";
   stack?.classList.add("is-linear");
+  document.body.classList.remove("is-fixed-stack");
   window.clearTimeout(state.snapTimer);
   if (state.animationFrame) {
     window.cancelAnimationFrame(state.animationFrame);
@@ -538,7 +567,11 @@ syncStackMetrics();
 applyResponsiveMode();
 runIntro();
 updateWorldClocks();
-window.addEventListener("scroll", handleDesktopScroll, { passive: true });
+window.addEventListener("wheel", handleDesktopWheel, { passive: false });
+window.addEventListener("touchstart", handleDesktopTouchStart, { passive: true });
+window.addEventListener("touchmove", handleDesktopTouchMove, { passive: false });
+window.addEventListener("touchend", handleDesktopTouchEnd, { passive: true });
+window.addEventListener("touchcancel", handleDesktopTouchEnd, { passive: true });
 window.addEventListener("resize", handleResize, { passive: true });
 window.addEventListener("orientationchange", handleResize, { passive: true });
 window.setInterval(updateWorldClocks, 30000);
