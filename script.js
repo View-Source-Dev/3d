@@ -11,8 +11,6 @@ const site = document.querySelector(".site");
 const stackProjectName = document.querySelector("#stackProjectName");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
-const siteNavToggle = document.querySelector("#siteNavToggle");
-const siteNavPanel = document.querySelector("#siteNavPanel");
 const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 const stillAssets = [
@@ -74,8 +72,6 @@ let stackStartOffset = 0;
 let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
-let viewportHeight = window.innerHeight || 1;
-let useLinearMobileLayout = false;
 
 function shuffle(list) {
   const copy = [...list];
@@ -104,51 +100,6 @@ function buildVimeoSrc(vimeoId) {
     dnt: "1",
   });
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
-}
-
-function syncViewportHeight() {
-  viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-  document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
-}
-
-function setNavOpen(isOpen) {
-  if (!siteNavToggle || !siteNavPanel) {
-    return;
-  }
-
-  siteNavToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-  siteNavPanel.classList.toggle("is-open", isOpen);
-  document.body.classList.toggle("nav-open", isOpen);
-}
-
-function closeNav() {
-  setNavOpen(false);
-}
-
-function shouldUseLinearMobileLayout() {
-  return window.matchMedia("(max-width: 767px) and (orientation: portrait)").matches;
-}
-
-function ensureFrameLoaded(frame) {
-  if (!frame || frame.src || !frame.dataset.src) {
-    return;
-  }
-
-  frame.src = frame.dataset.src;
-  frame.loading = "eager";
-}
-
-function applyLayoutMode() {
-  useLinearMobileLayout = shouldUseLinearMobileLayout();
-  stack?.classList.toggle("is-linear", useLinearMobileLayout);
-
-  if (useLinearMobileLayout) {
-    const frames = stackStage?.querySelectorAll("iframe") || [];
-    frames.forEach((frame) => {
-      ensureFrameLoaded(frame);
-      frame.removeAttribute("data-paused");
-    });
-  }
 }
 
 function setupLoaderBuckets() {
@@ -414,19 +365,6 @@ function updateStackMotion() {
     return;
   }
 
-  if (useLinearMobileLayout) {
-    cards.forEach((card) => {
-      card.style.zIndex = "1";
-      card.style.setProperty("--stack-y", "0%");
-      const frame = card.querySelector("iframe");
-      ensureFrameLoaded(frame);
-      frame?.removeAttribute("data-paused");
-    });
-    ensureActiveProjectTitle();
-    document.documentElement.style.setProperty("--subtitle-opacity", "1");
-    return;
-  }
-
   const clampedProgress = clamp(currentStackProgress, 0, Math.max(0, cardCount - 1));
   const currentIndex = Math.floor(clampedProgress);
   const nextIndex = Math.min(currentIndex + 1, cardCount - 1);
@@ -483,9 +421,13 @@ function updateStackMotion() {
     const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
     const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
     if (shouldLoad) {
-      ensureFrameLoaded(frame);
+      if (!frame.src && frame.dataset.src) {
+        frame.src = frame.dataset.src;
+        frame.loading = "eager";
+      }
       frame.removeAttribute("data-paused");
-    } else {
+    } else if (frame.src) {
+      frame.removeAttribute("src");
       frame.setAttribute("data-paused", "true");
     }
   });
@@ -520,13 +462,13 @@ function updateStackFromScroll() {
     return;
   }
 
-  if (useLinearMobileLayout) {
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  if (scrollY > stackStartOffset + (stackMaxProgress * window.innerHeight)) {
+    window.scrollTo(0, stackStartOffset + (stackMaxProgress * window.innerHeight));
     return;
   }
-
-  const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const rawProgress = local / Math.max(1, viewportHeight);
+  const rawProgress = local / Math.max(1, window.innerHeight);
   stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
   queueStackMotion();
 
@@ -539,15 +481,15 @@ function updateStackFromScroll() {
 }
 
 function snapToNearestSlide() {
-  if (useLinearMobileLayout || isSnapping || !site?.classList.contains("is-visible")) {
+  if (isSnapping || !site?.classList.contains("is-visible")) {
     return;
   }
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
+  const progress = clamp(local / Math.max(1, window.innerHeight), 0, stackMaxProgress);
   const targetIndex = Math.round(progress);
-  const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
+  const targetScroll = stackStartOffset + (targetIndex * window.innerHeight);
 
   if (Math.abs(targetScroll - scrollY) < 1) {
     return;
@@ -561,7 +503,7 @@ function snapToNearestSlide() {
 }
 
 function updateVimeoScale() {
-  const viewportAspect = window.innerWidth / Math.max(1, viewportHeight);
+  const viewportAspect = window.innerWidth / Math.max(1, window.innerHeight);
   const baseAspect = 16 / 9;
   const scale = Math.max(viewportAspect / baseAspect, baseAspect / viewportAspect);
   vimeoScale = Math.max(1, scale);
@@ -634,8 +576,6 @@ function runIntro() {
 buildStack();
 stackMaxProgress = Math.max(0, slides.length - 1);
 document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
-syncViewportHeight();
-applyLayoutMode();
 updateVimeoScale();
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
@@ -651,45 +591,9 @@ ensureActiveProjectTitle();
 lastDominantIndex = 0;
 updateStackMotion();
 
-siteNavToggle?.addEventListener("click", () => {
-  const isOpen = siteNavToggle.getAttribute("aria-expanded") !== "true";
-  setNavOpen(isOpen);
-});
-
-siteNavPanel?.querySelectorAll("a").forEach((link) => {
-  link.addEventListener("click", () => {
-    closeNav();
-  });
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeNav();
-  }
-});
-
-document.addEventListener("click", (event) => {
-  if (!siteNavPanel?.classList.contains("is-open")) {
-    return;
-  }
-
-  const target = event.target;
-  if (!(target instanceof Node)) {
-    return;
-  }
-
-  if (siteNavPanel.contains(target) || siteNavToggle?.contains(target)) {
-    return;
-  }
-
-  closeNav();
-});
-
 window.addEventListener("scroll", updateStackFromScroll, { passive: true });
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
-  syncViewportHeight();
-  applyLayoutMode();
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   currentStackProgress = 0;
   stackTargetProgress = 0;
@@ -702,11 +606,6 @@ window.addEventListener("load", () => {
 });
 
 window.addEventListener("resize", () => {
-  syncViewportHeight();
-  applyLayoutMode();
-  if (window.innerWidth >= 768) {
-    closeNav();
-  }
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   updateStackFromScroll();
   updateVimeoScale();
