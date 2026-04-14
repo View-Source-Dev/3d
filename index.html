@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Source</title>
+    <meta
+      name="description"
+      content="View Source Paris. 3D, AI, and image systems."
+    />
+    <link rel="preload" href="View%20Source%20Fonts/Fonts/denim-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="View%20Source%20Fonts/Fonts/denim-ink-semibold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="loader" id="loader" aria-label="Bucket render intro">
+      <div class="loader-shell">
+        <div class="loader-copy">
+          <img class="loader-logo" src="logo.svg" alt="View Source" />
+        </div>
+        <div class="loader-visual">
+          <div class="loader-frame" id="loaderFrame">
+            <img id="loaderImage" src="" alt="Loading preview" />
+            <div class="loader-buckets" id="loaderBuckets"></div>
+          </div>
+          <div class="loader-bar" id="loaderBar" aria-hidden="true">
+            <span class="loader-bar-fill"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="white-flash" id="whiteFlash" aria-hidden="true"></div>
+
+    <main class="site">
+      <section class="stack" aria-label="Video stack">
+        <div class="stack-pin">
+          <div class="stack-overlay" aria-hidden="true">
+            <div class="stack-overlay-copy">
+              <img class="stack-overlay-logo" src="logo.svg" alt="" />
+              <p class="stack-overlay-text">Direction, Design &amp; CGI</p>
+            </div>
+            <div class="stack-overlay-project" id="stackProjectName">
+              <span class="stack-project-current">Cadence</span>
+              <span class="stack-project-next">Moonbeam</span>
+            </div>
+          </div>
+          <div class="stack-stage" id="stackStage"></div>
+        </div>
+        <div class="stack-spacer" aria-hidden="true"></div>
+      </section>
+    </main>
+    <footer class="contact-footer">
+      <a class="contact-link" href="https://view-source.com/" target="_blank" rel="noreferrer">view-source.com</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
