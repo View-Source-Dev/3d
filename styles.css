@@ -446,7 +446,8 @@ body.is-fixed-stack .stack-spacer {
     transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 260ms ease;
   opacity: 0;
-  transform: translate3d(100%, 0, 0);
+  transform: translate3d(0, 0, 0);
+  clip-path: inset(0 0 0 0);
 }
 
 .stack-card::after {
@@ -460,61 +461,65 @@ body.is-fixed-stack .stack-spacer {
 
 .stack-card[data-card-state="active"] {
   opacity: 1;
-  z-index: 5;
+  z-index: 3;
   transform: translate3d(0, 0, 0);
 }
 
 .stack-card[data-card-state="next"] {
   opacity: 1;
-  z-index: 4;
-  transform: translate3d(-100%, 0, 0);
+  z-index: 2;
+  transform: translate3d(0, 0, 0);
 }
 
 .stack-card[data-card-state="prev"] {
   opacity: 1;
+  z-index: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.stack-card[data-card-state="hidden"] {
+  opacity: 0;
+  z-index: 0;
+}
+
+.stack-card[data-card-motion="reveal-next"] {
+  opacity: 1;
   z-index: 4;
-  transform: translate3d(100%, 0, 0);
+  clip-path: inset(0 0 0 100%);
+  animation: cardRevealNext 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.stack-card[data-card-state="far-next"] {
-  opacity: 0;
-  z-index: 2;
-  transform: translate3d(-100%, 0, 0);
-}
-
-.stack-card[data-card-state="far-prev"] {
-  opacity: 0;
-  z-index: 2;
-  transform: translate3d(100%, 0, 0);
-}
-
-.stack-card[data-card-state="hidden-right"] {
-  opacity: 0;
-  z-index: 1;
-  transform: translate3d(100%, 0, 0);
-}
-
-.stack-card[data-card-state="hidden-left"] {
-  opacity: 0;
-  z-index: 1;
-  transform: translate3d(-100%, 0, 0);
-}
-
-.stack-card[data-card-motion="exit-next"] {
+.stack-card[data-card-motion="reveal-prev"] {
   opacity: 1;
-  z-index: 6;
-  transform: translate3d(100%, 0, 0);
+  z-index: 4;
+  clip-path: inset(0 100% 0 0);
+  animation: cardRevealPrev 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.stack-card[data-card-motion="exit-prev"] {
-  opacity: 1;
-  z-index: 6;
-  transform: translate3d(-100%, 0, 0);
+.stack-card[data-card-motion="reveal-next"]::after,
+.stack-card[data-card-motion="reveal-prev"]::after {
+  background: rgba(0, 0, 0, 0);
 }
 
-.stack-card[data-card-motion="settle"] {
-  opacity: 1;
-  z-index: 5;
+@keyframes cardRevealNext {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes cardRevealPrev {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.stack-card[data-card-motion="settled"] {
   transform: translate3d(0, 0, 0);
 }
 

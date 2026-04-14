@@ -193,24 +193,15 @@ function renderDesktopDeck() {
   const activeIndex = state.activeIndex;
   const nextIndex = wrapIndex(activeIndex + 1);
   const prevIndex = wrapIndex(activeIndex - 1);
-  const nextFarIndex = wrapIndex(activeIndex + 2);
-  const prevFarIndex = wrapIndex(activeIndex - 2);
 
   state.cards.forEach((card, index) => {
-    let nextState = "hidden-right";
+    let nextState = "hidden";
     if (index === activeIndex) {
       nextState = "active";
     } else if (index === nextIndex) {
       nextState = "next";
     } else if (index === prevIndex) {
       nextState = "prev";
-    } else if (index === nextFarIndex) {
-      nextState = "far-next";
-    } else if (index === prevFarIndex) {
-      nextState = "far-prev";
-    } else {
-      const forwardDistance = wrapIndex(index - activeIndex);
-      nextState = forwardDistance < slides.length / 2 ? "hidden-right" : "hidden-left";
     }
 
     setCardState(card, nextState);
@@ -230,6 +221,7 @@ function transitionDesktop(direction) {
   const incomingIndex = wrapIndex(outgoingIndex + direction);
   const outgoingCard = state.cards[outgoingIndex];
   const incomingCard = state.cards[incomingIndex];
+  const incomingMotion = direction > 0 ? "reveal-next" : "reveal-prev";
 
   ensureFrameLoaded(incomingCard);
   ensureFrameLoaded(state.cards[wrapIndex(incomingIndex + direction)]);
@@ -238,8 +230,8 @@ function transitionDesktop(direction) {
   state.transitioning = true;
 
   window.requestAnimationFrame(() => {
-    setCardState(outgoingCard, "active", direction > 0 ? "exit-next" : "exit-prev");
-    setCardState(incomingCard, "active", "settle");
+    setCardState(outgoingCard, "active");
+    setCardState(incomingCard, "active", incomingMotion);
   });
 
   window.setTimeout(() => {
