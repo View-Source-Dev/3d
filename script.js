@@ -66,6 +66,9 @@ const state = {
   desktopTouchY: 0,
   wheelDelta: 0,
   transitioning: false,
+  autoAdvanceTimer: 0,
+  warmupTimer: 0,
+  warmupIndex: 0,
 };
 
 function shuffle(list) {
@@ -130,6 +133,17 @@ function setActiveProject(name) {
   }
 }
 
+function resetAutoAdvanceTimer() {
+  window.clearTimeout(state.autoAdvanceTimer);
+  if (state.mode !== "desktop") {
+    return;
+  }
+
+  state.autoAdvanceTimer = window.setTimeout(() => {
+    transitionDesktop(1, true);
+  }, 4600);
+}
+
 function postToVimeo(frame, method) {
   if (!frame?.contentWindow) {
     return;
@@ -146,6 +160,22 @@ function ensureFrameLoaded(card) {
 
   frame.src = frame.dataset.src;
   return frame;
+}
+
+function startVideoWarmup() {
+  window.clearTimeout(state.warmupTimer);
+
+  const warmNext = () => {
+    if (state.warmupIndex >= state.cards.length) {
+      return;
+    }
+
+    ensureFrameLoaded(state.cards[state.warmupIndex]);
+    state.warmupIndex += 1;
+    state.warmupTimer = window.setTimeout(warmNext, 220);
+  };
+
+  warmNext();
 }
 
 function syncPlaybackWindow(centerIndex) {
@@ -208,13 +238,17 @@ function renderDesktopDeck() {
   });
 }
 
-function transitionDesktop(direction) {
+function transitionDesktop(direction, isAutoAdvance = false) {
   if (state.mode !== "desktop") {
     return;
   }
 
   if (state.transitioning) {
     return;
+  }
+
+  if (!isAutoAdvance) {
+    resetAutoAdvanceTimer();
   }
 
   const outgoingIndex = state.activeIndex;
@@ -240,6 +274,7 @@ function transitionDesktop(direction) {
     renderDesktopDeck();
     setActiveProject(slides[incomingIndex]?.name || "");
     syncPlaybackWindow(incomingIndex);
+    resetAutoAdvanceTimer();
   }, 430);
 }
 
@@ -250,8 +285,9 @@ function handleDesktopWheel(event) {
 
   event.preventDefault();
   state.wheelDelta += event.deltaY;
+  resetAutoAdvanceTimer();
 
-  if (Math.abs(state.wheelDelta) < 42) {
+  if (Math.abs(state.wheelDelta) < 26) {
     return;
   }
 
@@ -267,6 +303,7 @@ function handleDesktopTouchStart(event) {
 
   state.desktopTouchActive = true;
   state.desktopTouchY = event.touches[0].clientY;
+  resetAutoAdvanceTimer();
 }
 
 function handleDesktopTouchMove(event) {
@@ -278,6 +315,7 @@ function handleDesktopTouchMove(event) {
   const deltaY = state.desktopTouchY - nextY;
   state.desktopTouchY = nextY;
   event.preventDefault();
+  resetAutoAdvanceTimer();
 
   if (Math.abs(deltaY) < 6) {
     return;
@@ -339,12 +377,14 @@ function applyDesktopLayout() {
   renderDesktopDeck();
   setActiveProject(slides[state.activeIndex]?.name || "");
   syncPlaybackWindow(state.activeIndex);
+  resetAutoAdvanceTimer();
 }
 
 function applyMobileLayout() {
   state.mode = "mobile";
   stack?.classList.add("is-linear");
   document.body.classList.remove("is-fixed-stack");
+  window.clearTimeout(state.autoAdvanceTimer);
   state.cards.forEach((card) => {
     delete card.dataset.cardState;
     delete card.dataset.cardMotion;
@@ -532,6 +572,7 @@ function runIntro() {
     loaderFrame.classList.add("is-loading");
     loaderBar.classList.add("is-loading");
     animateFakeLoaderBar(duration);
+    startVideoWarmup();
 
     window.setTimeout(() => {
       loaderFrame.classList.remove("is-loading");

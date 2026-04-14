@@ -443,8 +443,8 @@ body.is-fixed-stack .stack-spacer {
   background: #000;
   will-change: transform, opacity;
   transition:
-    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 260ms ease;
+    transform 620ms cubic-bezier(0.18, 0.9, 0.22, 1),
+    opacity 320ms ease;
   opacity: 0;
   transform: translate3d(0, 0, 0);
   clip-path: inset(0 0 0 0);
@@ -486,14 +486,14 @@ body.is-fixed-stack .stack-spacer {
   opacity: 1;
   z-index: 4;
   clip-path: inset(0 0 0 100%);
-  animation: cardRevealNext 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: cardRevealNext 760ms cubic-bezier(0.16, 0.95, 0.2, 1) forwards;
 }
 
 .stack-card[data-card-motion="reveal-prev"] {
   opacity: 1;
   z-index: 4;
   clip-path: inset(0 100% 0 0);
-  animation: cardRevealPrev 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: cardRevealPrev 760ms cubic-bezier(0.16, 0.95, 0.2, 1) forwards;
 }
 
 .stack-card[data-card-motion="reveal-next"]::after,
@@ -504,18 +504,22 @@ body.is-fixed-stack .stack-spacer {
 @keyframes cardRevealNext {
   from {
     clip-path: inset(0 0 0 100%);
+    transform: translate3d(-2.5%, 0, 0) scale(1.03);
   }
   to {
     clip-path: inset(0 0 0 0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 @keyframes cardRevealPrev {
   from {
     clip-path: inset(0 100% 0 0);
+    transform: translate3d(2.5%, 0, 0) scale(1.03);
   }
   to {
     clip-path: inset(0 0 0 0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
