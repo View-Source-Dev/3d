@@ -107,6 +107,7 @@ function buildVimeoSrc(vimeoId) {
     byline: "0",
     portrait: "0",
     dnt: "1",
+    controls: "0",
   });
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}#t=0.5s`;
 }
@@ -207,7 +208,15 @@ function syncPlaybackProgress(currentIndex, nextIndex, fraction) {
 
   state.cards.forEach((card, index) => {
     const frame = card.querySelector("iframe");
-    if (!frame || !frame.src) {
+    if (!frame) {
+      return;
+    }
+
+    if (playing.has(index)) {
+      ensureFrameLoaded(card);
+    }
+
+    if (!frame.src) {
       return;
     }
 
@@ -252,19 +261,20 @@ function updateDesktopCards(progress) {
   if (currentCard) {
     currentCard.style.opacity = "1";
     currentCard.style.zIndex = "2";
-    currentCard.style.transform = `translate3d(0, 0, 0) scale(${1 - fraction * 0.004})`;
+    currentCard.style.transform = `translate3d(${fraction * 2.8}%, 0, 0) scale(${1 - fraction * 0.01})`;
   }
 
   if (nextCard) {
     nextCard.style.opacity = "1";
     nextCard.style.zIndex = "3";
     nextCard.style.clipPath = `inset(0 ${Math.max(0, (1 - fraction) * 100)}% 0 0)`;
-    nextCard.style.transform = `translate3d(${-1.2 + fraction * 1.2}%, 0, 0) scale(${1.008 - fraction * 0.008})`;
+    nextCard.style.transform = `translate3d(${-5.6 + fraction * 5.6}%, 0, 0) scale(${1.03 - fraction * 0.03})`;
   }
 
   if (prevCard && fraction < 0.015) {
     prevCard.style.opacity = "1";
     prevCard.style.zIndex = "1";
+    prevCard.style.transform = "translate3d(-1.5%, 0, 0) scale(1.01)";
   }
 
   if (stackOverlay) {
