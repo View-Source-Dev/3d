@@ -563,8 +563,9 @@ a {
   gap: 0.2rem;
   padding: 0.55rem 1.2rem 0.75rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .contact-footer a {
