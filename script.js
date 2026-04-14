@@ -69,6 +69,7 @@ const state = {
   autoAdvanceTimer: 0,
   warmupTimer: 0,
   warmupIndex: 0,
+  lastGestureAt: 0,
 };
 
 function shuffle(list) {
@@ -141,7 +142,7 @@ function resetAutoAdvanceTimer() {
 
   state.autoAdvanceTimer = window.setTimeout(() => {
     transitionDesktop(1, true);
-  }, 4600);
+  }, 3200);
 }
 
 function postToVimeo(frame, method) {
@@ -284,10 +285,11 @@ function handleDesktopWheel(event) {
   }
 
   event.preventDefault();
+  state.lastGestureAt = performance.now();
   state.wheelDelta += event.deltaY;
   resetAutoAdvanceTimer();
 
-  if (Math.abs(state.wheelDelta) < 26) {
+  if (state.transitioning || Math.abs(state.wheelDelta) < 10) {
     return;
   }
 
@@ -303,6 +305,7 @@ function handleDesktopTouchStart(event) {
 
   state.desktopTouchActive = true;
   state.desktopTouchY = event.touches[0].clientY;
+  state.lastGestureAt = performance.now();
   resetAutoAdvanceTimer();
 }
 
@@ -315,6 +318,7 @@ function handleDesktopTouchMove(event) {
   const deltaY = state.desktopTouchY - nextY;
   state.desktopTouchY = nextY;
   event.preventDefault();
+  state.lastGestureAt = performance.now();
   resetAutoAdvanceTimer();
 
   if (Math.abs(deltaY) < 6) {
