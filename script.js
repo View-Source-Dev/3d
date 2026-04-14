@@ -8,6 +8,7 @@ const loaderBuckets = document.querySelector("#loaderBuckets");
 const loaderBarFill = document.querySelector(".loader-bar-fill");
 const whiteFlash = document.querySelector("#whiteFlash");
 const site = document.querySelector(".site");
+const stackOverlay = document.querySelector(".stack-overlay");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
 const clockNodes = Array.from(document.querySelectorAll("[data-clock]"));
@@ -200,6 +201,27 @@ function syncPlaybackWindow(centerIndex) {
   });
 }
 
+function syncPlaybackProgress(currentIndex, nextIndex, fraction) {
+  const playNext = fraction > 0.02;
+  const playing = new Set([currentIndex]);
+  if (playNext) {
+    playing.add(nextIndex);
+  }
+
+  state.cards.forEach((card, index) => {
+    const frame = card.querySelector("iframe");
+    if (!frame || !frame.src) {
+      return;
+    }
+
+    if (playing.has(index)) {
+      postToVimeo(frame, "play");
+    } else {
+      postToVimeo(frame, "pause");
+    }
+  });
+}
+
 function syncStackMetrics() {
   const viewportHeight = window.innerHeight;
   document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
@@ -248,9 +270,22 @@ function updateDesktopCards(progress) {
     prevCard.style.zIndex = "1";
   }
 
+  if (stackOverlay) {
+    stackOverlay.style.setProperty("--swipe-progress", fraction.toFixed(4));
+    stackOverlay.style.setProperty("--swipe-line-x", `${(fraction * 100).toFixed(3)}%`);
+  }
+
+  if (stackProjectCurrent) {
+    stackProjectCurrent.textContent = slides[baseIndex]?.name || "";
+  }
+  if (stackProjectNext) {
+    stackProjectNext.textContent = slides[nextIndex]?.name || "";
+  }
+
+  syncPlaybackProgress(baseIndex, nextIndex, fraction);
+
   if (baseIndex !== state.activeIndex) {
     state.activeIndex = baseIndex;
-    setActiveProject(slides[baseIndex]?.name || "");
     syncPlaybackWindow(baseIndex);
   }
 }
