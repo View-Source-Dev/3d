@@ -47,7 +47,7 @@ const slides = [
   { name: "Givenchy", vimeoId: "1182987619" },
   { name: "Byredo", vimeoId: "1182987608" },
   { name: "Club", vimeoId: "1183017503" },
-  { name: "L'Or\u00e9al", vimeoId: "1182987487" },
+  { name: "L'Oréal", vimeoId: "1182987487" },
   { name: "Bandit", vimeoId: "1182987377" },
   { name: "Sandro", vimeoId: "1182988010" },
   { name: "Sandro", vimeoId: "1182987807" },
@@ -56,6 +56,18 @@ const slides = [
   { name: "Lab", vimeoId: "1182987729" },
 ];
 
+const state = {
+  cards: [],
+  mode: "desktop",
+  activeIndex: 0,
+  targetProgress: 0,
+  currentProgress: 0,
+  animationFrame: 0,
+  snapTimer: 0,
+  resizeTimer: 0,
+  mobileObserver: null,
+};
+
 function shuffle(list) {
   const copy = [...list];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -63,6 +75,14 @@ function shuffle(list) {
     [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
   }
   return copy;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function lerp(start, end, amount) {
+  return start + (end - start) * amount;
 }
 
 function buildVimeoSrc(vimeoId) {
@@ -78,7 +98,11 @@ function buildVimeoSrc(vimeoId) {
     portrait: "0",
     dnt: "1",
   });
-  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
+  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}#t=0.5s`;
+}
+
+function isMobileLayout() {
+  return window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
 }
 
 function updateWorldClocks() {
@@ -112,6 +136,215 @@ function postToVimeo(frame, method) {
   }
 
   frame.contentWindow.postMessage(JSON.stringify({ method }), "https://player.vimeo.com");
+}
+
+function ensureFrameLoaded(card) {
+  const frame = card.querySelector("iframe");
+  if (!frame || frame.src || !frame.dataset.src) {
+    return frame;
+  }
+
+  frame.src = frame.dataset.src;
+  return frame;
+}
+
+function syncPlaybackWindow(centerIndex) {
+  state.cards.forEach((card, index) => {
+    const frame = card.querySelector("iframe");
+    if (!frame) {
+      return;
+    }
+
+    if (Math.abs(index - centerIndex) <= 2) {
+      ensureFrameLoaded(card);
+    }
+
+    if (!frame.src) {
+      return;
+    }
+
+    if (index === centerIndex) {
+      postToVimeo(frame, "play");
+    } else {
+      postToVimeo(frame, "pause");
+    }
+  });
+}
+
+function updateDesktopCards(progress) {
+  const maxIndex = slides.length - 1;
+  const boundedProgress = clamp(progress, 0, maxIndex);
+
+  state.cards.forEach((card, index) => {
+    const distance = index - boundedProgress;
+    const absDistance = Math.abs(distance);
+    const offset = distance * 82;
+    const scale = 1 - Math.min(absDistance, 1.8) * 0.11;
+    const opacity = clamp(1 - absDistance * 0.42, 0, 1);
+    const dim = clamp(absDistance * 0.18, 0, 0.4);
+
+    card.style.transform = `translate3d(0, ${offset}%, 0) scale(${scale})`;
+    card.style.opacity = `${opacity}`;
+    card.style.zIndex = String(1000 - Math.round(absDistance * 100) - index);
+    card.style.setProperty("--card-dim", `${dim}`);
+  });
+
+  const nextIndex = Math.round(boundedProgress);
+  if (nextIndex !== state.activeIndex) {
+    state.activeIndex = nextIndex;
+    setActiveProject(slides[nextIndex]?.name || "");
+    syncPlaybackWindow(nextIndex);
+  }
+}
+
+function stepDesktopAnimation() {
+  state.currentProgress = lerp(state.currentProgress, state.targetProgress, 0.14);
+  if (Math.abs(state.currentProgress - state.targetProgress) < 0.001) {
+    state.currentProgress = state.targetProgress;
+  }
+
+  updateDesktopCards(state.currentProgress);
+
+  if (Math.abs(state.currentProgress - state.targetProgress) > 0.001) {
+    state.animationFrame = window.requestAnimationFrame(stepDesktopAnimation);
+  } else {
+    state.animationFrame = 0;
+  }
+}
+
+function requestDesktopAnimation() {
+  if (state.animationFrame) {
+    return;
+  }
+  state.animationFrame = window.requestAnimationFrame(stepDesktopAnimation);
+}
+
+function getDesktopTravel() {
+  return Math.max((slides.length - 1) * window.innerHeight, 1);
+}
+
+function syncStackMetrics() {
+  const viewportHeight = window.innerHeight;
+  document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
+  stack?.style.setProperty("--stack-travel", `${Math.max((slides.length - 1) * viewportHeight, 0)}px`);
+}
+
+function updateDesktopProgress() {
+  if (!stack) {
+    return;
+  }
+
+  const stackTop = stack.getBoundingClientRect().top + window.scrollY;
+  const travel = getDesktopTravel();
+  const offset = clamp(window.scrollY - stackTop, 0, travel);
+  state.targetProgress = clamp(offset / window.innerHeight, 0, slides.length - 1);
+  requestDesktopAnimation();
+}
+
+function snapDesktopScroll() {
+  if (state.mode !== "desktop" || !stack) {
+    return;
+  }
+
+  const stackTop = stack.getBoundingClientRect().top + window.scrollY;
+  const travel = getDesktopTravel();
+  const offset = clamp(window.scrollY - stackTop, 0, travel);
+  const nearestIndex = clamp(Math.round(offset / window.innerHeight), 0, slides.length - 1);
+  const snapTarget = stackTop + nearestIndex * window.innerHeight;
+
+  window.scrollTo({
+    top: snapTarget,
+    behavior: "smooth",
+  });
+}
+
+function handleDesktopScroll() {
+  if (state.mode !== "desktop") {
+    return;
+  }
+
+  window.clearTimeout(state.snapTimer);
+  updateDesktopProgress();
+  state.snapTimer = window.setTimeout(snapDesktopScroll, 110);
+}
+
+function teardownMobileObserver() {
+  if (state.mobileObserver) {
+    state.mobileObserver.disconnect();
+    state.mobileObserver = null;
+  }
+}
+
+function setupMobileObserver() {
+  teardownMobileObserver();
+
+  state.mobileObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const card = entry.target;
+      const frame = ensureFrameLoaded(card);
+      if (!frame) {
+        return;
+      }
+
+      if (entry.isIntersecting && entry.intersectionRatio > 0.45) {
+        postToVimeo(frame, "play");
+        setActiveProject(card.dataset.projectName || "");
+      } else {
+        postToVimeo(frame, "pause");
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: "240px 0px",
+    threshold: [0, 0.45, 0.8],
+  });
+
+  state.cards.forEach((card) => {
+    state.mobileObserver?.observe(card);
+  });
+}
+
+function applyDesktopLayout() {
+  state.mode = "desktop";
+  stack?.classList.remove("is-linear");
+  teardownMobileObserver();
+  syncStackMetrics();
+  updateDesktopProgress();
+  syncPlaybackWindow(state.activeIndex);
+}
+
+function applyMobileLayout() {
+  state.mode = "mobile";
+  stack?.classList.add("is-linear");
+  window.clearTimeout(state.snapTimer);
+  if (state.animationFrame) {
+    window.cancelAnimationFrame(state.animationFrame);
+    state.animationFrame = 0;
+  }
+  state.cards.forEach((card) => {
+    card.style.removeProperty("transform");
+    card.style.removeProperty("opacity");
+    card.style.removeProperty("z-index");
+    card.style.removeProperty("--card-dim");
+  });
+  setupMobileObserver();
+}
+
+function applyResponsiveMode() {
+  const nextMode = isMobileLayout() ? "mobile" : "desktop";
+  if (nextMode === "mobile") {
+    applyMobileLayout();
+  } else {
+    applyDesktopLayout();
+  }
+}
+
+function handleResize() {
+  window.clearTimeout(state.resizeTimer);
+  state.resizeTimer = window.setTimeout(() => {
+    syncStackMetrics();
+    applyResponsiveMode();
+  }, 80);
 }
 
 function setupLoaderBuckets() {
@@ -158,10 +391,7 @@ function syncLoaderBuckets(imageUrl, naturalWidth, naturalHeight) {
   const frameRect = loaderFrame.getBoundingClientRect();
 
   const tilesByPosition = new Map(
-    Array.from(loaderBuckets.children).map((tile) => [
-      `${tile.dataset.rowOrder}-${tile.dataset.colOrder}`,
-      tile,
-    ]),
+    Array.from(loaderBuckets.children).map((tile) => [`${tile.dataset.rowOrder}-${tile.dataset.colOrder}`, tile]),
   );
 
   const spiralPositions = [
@@ -207,10 +437,10 @@ function animateFakeLoaderBar(duration) {
 
   function tick(now) {
     const elapsed = now - start;
-    const t = Math.min(elapsed / duration, 1);
-    loaderBarFill.style.width = `${t * 100}%`;
+    const progress = Math.min(elapsed / duration, 1);
+    loaderBarFill.style.width = `${progress * 100}%`;
 
-    if (t < 1) {
+    if (progress < 1) {
       requestAnimationFrame(tick);
     }
   }
@@ -224,64 +454,34 @@ function buildStack() {
     return;
   }
 
-  stack.classList.add("is-linear");
+  const fragment = document.createDocumentFragment();
 
   slides.forEach((asset, index) => {
     const card = document.createElement("div");
     card.className = "stack-card";
     card.dataset.stackIndex = String(index);
     card.dataset.projectName = asset.name;
+    card.style.setProperty("--card-dim", "0");
 
     const iframe = document.createElement("iframe");
     iframe.className = "stack-video";
     iframe.dataset.src = buildVimeoSrc(asset.vimeoId);
     iframe.title = asset.name;
-    iframe.loading = index < 3 ? "eager" : "lazy";
+    iframe.loading = index < 4 ? "eager" : "lazy";
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
-    if (index < 3) {
+
+    if (index < 4) {
       iframe.src = iframe.dataset.src;
     }
 
     card.appendChild(iframe);
-    stackStage.appendChild(card);
-  });
-}
-
-function setupLinearPlayback() {
-  if (!stackStage) {
-    return;
-  }
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      const card = entry.target;
-      const frame = card.querySelector("iframe");
-      if (!frame) {
-        return;
-      }
-
-      if (entry.isIntersecting && !frame.src && frame.dataset.src) {
-        frame.src = frame.dataset.src;
-      }
-
-      if (entry.isIntersecting && entry.intersectionRatio > 0.45) {
-        postToVimeo(frame, "play");
-        setActiveProject(card.dataset.projectName || "");
-      } else if (frame.src) {
-        postToVimeo(frame, "pause");
-      }
-    });
-  }, {
-    root: null,
-    rootMargin: "220px 0px",
-    threshold: [0, 0.45, 0.8],
+    fragment.appendChild(card);
+    state.cards.push(card);
   });
 
-  stackStage.querySelectorAll(".stack-card").forEach((card) => {
-    observer.observe(card);
-  });
+  stackStage.appendChild(fragment);
 }
 
 function runIntro() {
@@ -334,7 +534,11 @@ function runIntro() {
 
 buildStack();
 setActiveProject(slides[0]?.name || "");
-setupLinearPlayback();
+syncStackMetrics();
+applyResponsiveMode();
 runIntro();
 updateWorldClocks();
+window.addEventListener("scroll", handleDesktopScroll, { passive: true });
+window.addEventListener("resize", handleResize, { passive: true });
+window.addEventListener("orientationchange", handleResize, { passive: true });
 window.setInterval(updateWorldClocks, 30000);
