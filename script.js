@@ -76,10 +76,6 @@ let isSnapping = false;
 let viewportHeight = window.innerHeight || 1;
 let useLinearMobileLayout = false;
 let linearObserver = null;
-let lastScrollY = 0;
-let lastScrollTime = 0;
-let scrollVelocity = 0;
-let snapAnimationFrame = null;
 
 const INITIAL_PRELOAD_COUNT = 4;
 const FORWARD_PRELOAD_COUNT = 4;
@@ -177,43 +173,6 @@ function setFramePlaying(frame, shouldPlay) {
   } else {
     postToVimeo(frame, "pause");
   }
-}
-
-function stopSnapAnimation() {
-  if (snapAnimationFrame) {
-    cancelAnimationFrame(snapAnimationFrame);
-    snapAnimationFrame = null;
-  }
-  isSnapping = false;
-}
-
-function animateSnapTo(targetScroll) {
-  stopSnapAnimation();
-
-  const startScroll = window.scrollY || window.pageYOffset || 0;
-  const distance = targetScroll - startScroll;
-  if (Math.abs(distance) < 1) {
-    return;
-  }
-
-  const duration = 640;
-  const startTime = performance.now();
-  isSnapping = true;
-
-  const step = (now) => {
-    const progress = clamp((now - startTime) / duration, 0, 1);
-    const eased = 1 - Math.pow(1 - progress, 4);
-    window.scrollTo(0, startScroll + (distance * eased));
-
-    if (progress < 1) {
-      snapAnimationFrame = requestAnimationFrame(step);
-    } else {
-      snapAnimationFrame = null;
-      isSnapping = false;
-    }
-  };
-
-  snapAnimationFrame = requestAnimationFrame(step);
 }
 
 function preloadFramesThrough(index) {
@@ -431,7 +390,7 @@ function buildStack() {
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
     iframe.dataset.startOffsetApplied = "false";
-    iframe.dataset.shouldPlay = index === 0 ? "true" : "false";
+    iframe.dataset.shouldPlay = index < 2 ? "true" : "false";
     iframe.addEventListener("load", () => {
       window.setTimeout(() => {
         if (iframe.dataset.startOffsetApplied !== "true") {
@@ -615,7 +574,7 @@ function updateStackMotion() {
     const prevIndex = Math.max(0, currentIndex - 1);
     const forwardIndex = Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1);
     const shouldLoad = index >= prevIndex && index <= forwardIndex;
-    const shouldPlay = index === dominantIndex;
+    const shouldPlay = index === currentIndex || index === nextIndex;
     if (shouldLoad) {
       ensureFrameLoaded(frame);
       setFramePlaying(frame, shouldPlay);
@@ -667,15 +626,6 @@ function updateStackFromScroll() {
   }
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
-  const now = performance.now();
-  if (lastScrollTime > 0) {
-    const deltaY = scrollY - lastScrollY;
-    const deltaTime = Math.max(16, now - lastScrollTime);
-    scrollVelocity = deltaY / deltaTime;
-  }
-  lastScrollY = scrollY;
-  lastScrollTime = now;
-
   if (scrollY > stackStartOffset + (stackMaxProgress * viewportHeight)) {
     window.scrollTo(0, stackStartOffset + (stackMaxProgress * viewportHeight));
     return;
@@ -690,7 +640,7 @@ function updateStackFromScroll() {
   }
   scrollSnapTimer = window.setTimeout(() => {
     snapToNearestSlide();
-  }, 180);
+  }, 2000);
 }
 
 function snapToNearestSlide() {
@@ -701,15 +651,18 @@ function snapToNearestSlide() {
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
   const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
-  const projectedProgress = progress + ((scrollVelocity * 220) / Math.max(1, viewportHeight));
-  const targetIndex = clamp(Math.round(projectedProgress), 0, stackMaxProgress);
+  const targetIndex = Math.round(progress);
   const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
 
   if (Math.abs(targetScroll - scrollY) < 1) {
     return;
   }
 
-  animateSnapTo(targetScroll);
+  isSnapping = true;
+  window.scrollTo({ top: targetScroll, behavior: "smooth" });
+  window.setTimeout(() => {
+    isSnapping = false;
+  }, 420);
 }
 
 function updateVimeoScale() {
