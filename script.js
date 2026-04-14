@@ -233,14 +233,14 @@ function updateDesktopCards(progress) {
   if (currentCard) {
     currentCard.style.opacity = "1";
     currentCard.style.zIndex = "2";
-    currentCard.style.transform = `translate3d(${fraction * 0.9}%, 0, 0) scale(${1 - fraction * 0.01})`;
+    currentCard.style.transform = `translate3d(0, 0, 0) scale(${1 - fraction * 0.004})`;
   }
 
   if (nextCard) {
     nextCard.style.opacity = "1";
     nextCard.style.zIndex = "3";
     nextCard.style.clipPath = `inset(0 ${Math.max(0, (1 - fraction) * 100)}% 0 0)`;
-    nextCard.style.transform = `translate3d(${-1.8 + fraction * 1.8}%, 0, 0) scale(${1.01 - fraction * 0.01})`;
+    nextCard.style.transform = `translate3d(${-1.2 + fraction * 1.2}%, 0, 0) scale(${1.008 - fraction * 0.008})`;
   }
 
   if (prevCard && fraction < 0.015) {
@@ -265,12 +265,12 @@ function stepDesktopAnimation(now) {
   const deltaMs = now - previousTime;
   state.lastFrameAt = now;
 
-  if (now - state.lastGestureAt > 2600) {
-    state.targetProgress += deltaMs * 0.00012;
+  if (now - state.lastGestureAt > 2200) {
+    state.targetProgress += deltaMs * 0.00008;
   }
 
   const difference = state.targetProgress - state.currentProgress;
-  state.currentProgress += difference * 0.12;
+  state.currentProgress += difference * 0.09;
 
   if (Math.abs(difference) < 0.0001 && now - state.lastGestureAt <= 2600) {
     state.currentProgress = state.targetProgress;
@@ -295,7 +295,7 @@ function handleDesktopWheel(event) {
 
   event.preventDefault();
   state.lastGestureAt = performance.now();
-  state.targetProgress += event.deltaY * 0.0036;
+  state.targetProgress += event.deltaY * 0.0019;
   startDesktopAnimation();
 }
 
@@ -307,7 +307,6 @@ function handleDesktopTouchStart(event) {
   state.desktopTouchActive = true;
   state.desktopTouchY = event.touches[0].clientY;
   state.lastGestureAt = performance.now();
-  resetAutoAdvanceTimer();
 }
 
 function handleDesktopTouchMove(event) {
@@ -320,7 +319,7 @@ function handleDesktopTouchMove(event) {
   state.desktopTouchY = nextY;
   event.preventDefault();
   state.lastGestureAt = performance.now();
-  state.targetProgress += deltaY * 0.01;
+  state.targetProgress += deltaY * 0.0045;
   startDesktopAnimation();
 }
 
