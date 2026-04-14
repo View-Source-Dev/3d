@@ -76,6 +76,7 @@ let isSnapping = false;
 let viewportHeight = window.innerHeight || 1;
 let useLinearMobileLayout = false;
 let linearObserver = null;
+let isWrapScrolling = false;
 
 const INITIAL_PRELOAD_COUNT = 4;
 const FORWARD_PRELOAD_COUNT = 4;
@@ -665,6 +666,26 @@ function snapToNearestSlide() {
   }, 420);
 }
 
+function wrapStackScroll(direction) {
+  if (useLinearMobileLayout || isSnapping || isWrapScrolling || !site?.classList.contains("is-visible")) {
+    return;
+  }
+
+  const topScroll = stackStartOffset;
+  const bottomScroll = stackStartOffset + (stackMaxProgress * window.innerHeight);
+  const targetScroll = direction < 0 ? bottomScroll : topScroll;
+
+  isWrapScrolling = true;
+  isSnapping = true;
+  window.scrollTo({ top: targetScroll, behavior: "smooth" });
+
+  window.setTimeout(() => {
+    isSnapping = false;
+    isWrapScrolling = false;
+    updateStackFromScroll();
+  }, 520);
+}
+
 function updateVimeoScale() {
   const viewportAspect = window.innerWidth / Math.max(1, window.innerHeight);
   const baseAspect = 16 / 9;
@@ -759,6 +780,25 @@ lastDominantIndex = 0;
 updateStackMotion();
 
 window.addEventListener("scroll", updateStackFromScroll, { passive: true });
+window.addEventListener("wheel", (event) => {
+  if (useLinearMobileLayout || !site?.classList.contains("is-visible")) {
+    return;
+  }
+
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const topScroll = stackStartOffset;
+  const bottomScroll = stackStartOffset + (stackMaxProgress * window.innerHeight);
+  const nearTop = Math.abs(scrollY - topScroll) < 8;
+  const nearBottom = Math.abs(scrollY - bottomScroll) < 8;
+
+  if (event.deltaY < 0 && nearTop) {
+    event.preventDefault();
+    wrapStackScroll(-1);
+  } else if (event.deltaY > 0 && nearBottom) {
+    event.preventDefault();
+    wrapStackScroll(1);
+  }
+}, { passive: false });
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
   syncViewportHeight();
