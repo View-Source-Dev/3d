@@ -107,7 +107,7 @@ function buildVimeoSrc(vimeoId) {
     dnt: "1",
     api: "1",
   });
-  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}#t=${VIDEO_START_OFFSET_SECONDS}s`;
+  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
 }
 
 function syncViewportHeight() {
