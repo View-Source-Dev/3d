@@ -604,13 +604,17 @@ function updateStackFromScroll() {
     return;
   }
 
+  if (useLinearMobileLayout) {
+    return;
+  }
+
   const scrollY = window.scrollY || window.pageYOffset || 0;
-  if (scrollY > stackStartOffset + (stackMaxProgress * window.innerHeight)) {
-    window.scrollTo(0, stackStartOffset + (stackMaxProgress * window.innerHeight));
+  if (scrollY > stackStartOffset + (stackMaxProgress * viewportHeight)) {
+    window.scrollTo(0, stackStartOffset + (stackMaxProgress * viewportHeight));
     return;
   }
   const local = scrollY - stackStartOffset;
-  const rawProgress = local / Math.max(1, window.innerHeight);
+  const rawProgress = local / Math.max(1, viewportHeight);
   stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
   queueStackMotion();
 
@@ -623,15 +627,15 @@ function updateStackFromScroll() {
 }
 
 function snapToNearestSlide() {
-  if (isSnapping || !site?.classList.contains("is-visible")) {
+  if (useLinearMobileLayout || isSnapping || !site?.classList.contains("is-visible")) {
     return;
   }
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const progress = clamp(local / Math.max(1, window.innerHeight), 0, stackMaxProgress);
+  const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
   const targetIndex = Math.round(progress);
-  const targetScroll = stackStartOffset + (targetIndex * window.innerHeight);
+  const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
 
   if (Math.abs(targetScroll - scrollY) < 1) {
     return;
@@ -645,7 +649,7 @@ function snapToNearestSlide() {
 }
 
 function updateVimeoScale() {
-  const viewportAspect = window.innerWidth / Math.max(1, window.innerHeight);
+  const viewportAspect = window.innerWidth / Math.max(1, viewportHeight);
   const baseAspect = 16 / 9;
   const scale = Math.max(viewportAspect / baseAspect, baseAspect / viewportAspect);
   vimeoScale = Math.max(1, scale);
@@ -692,7 +696,6 @@ function runIntro() {
             site.classList.add("is-visible");
             window.scrollTo(0, 0);
             stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
-            scheduleIdlePreload(preloadedUntilIndex + 1);
             window.setTimeout(() => {
               whiteFlash?.classList.remove("is-visible");
             }, 220);
@@ -719,8 +722,8 @@ function runIntro() {
 buildStack();
 stackMaxProgress = Math.max(0, slides.length - 1);
 document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
-preloadedUntilIndex = INITIAL_PRELOAD_COUNT - 1;
-scheduleIdlePreload(INITIAL_PRELOAD_COUNT);
+syncViewportHeight();
+applyLayoutMode();
 updateVimeoScale();
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
@@ -739,6 +742,8 @@ updateStackMotion();
 window.addEventListener("scroll", updateStackFromScroll, { passive: true });
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
+  syncViewportHeight();
+  applyLayoutMode();
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   currentStackProgress = 0;
   stackTargetProgress = 0;
@@ -748,12 +753,12 @@ window.addEventListener("load", () => {
   updateStackMotion();
   updateStackFromScroll();
   updateVimeoScale();
-  scheduleIdlePreload(preloadedUntilIndex + 1);
 });
 
 window.addEventListener("resize", () => {
+  syncViewportHeight();
+  applyLayoutMode();
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   updateStackFromScroll();
   updateVimeoScale();
-  scheduleIdlePreload(preloadedUntilIndex + 1);
 });

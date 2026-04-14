@@ -21,6 +21,7 @@
   --line: rgba(18, 18, 16, 0.12);
   --page-pad: 1.125rem;
   --grid-gap: 1rem;
+  --stack-screen-height: 100vh;
 }
 
 * {
@@ -30,11 +31,12 @@
 html {
   scroll-behavior: smooth;
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: "Denim", Arial, sans-serif;
@@ -43,9 +45,11 @@ body {
 }
 
 img,
-video {
+video,
+iframe {
   display: block;
   width: 100%;
+  max-width: 100%;
 }
 
 a {
@@ -286,19 +290,19 @@ a {
 .stack {
   padding: 0;
   position: relative;
-  min-height: 100vh;
+  min-height: var(--stack-screen-height);
   padding-bottom: 0;
 }
 
 .stack-pin {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: var(--stack-screen-height);
   overflow: hidden;
 }
 
 .stack-spacer {
-  height: calc(var(--stack-count, 1) * 100vh);
+  height: calc(var(--stack-count, 1) * var(--stack-screen-height));
 }
 
 .stack-stage {
@@ -403,7 +407,7 @@ a {
   inset: 0;
   top: 0;
   width: 100%;
-  height: 100vh;
+  height: var(--stack-screen-height);
   overflow: hidden;
   background: #000;
   transform: translate3d(0, var(--stack-y, 100%), 0);
@@ -542,7 +546,120 @@ a {
   }
 
   .stack-card {
-    height: 100vh;
+    height: var(--stack-screen-height);
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  :root {
+    --page-pad: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  .loader-shell {
+    width: min(100% - 2rem, 34rem);
+    gap: 1rem;
+  }
+
+  .stack {
+    min-height: auto;
+    background: #000;
+  }
+
+  .stack.is-linear .stack-pin {
+    position: relative;
+    top: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .stack.is-linear .stack-overlay {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    padding: 1rem var(--page-pad) 0.9rem;
+    align-items: start;
+    background: #000;
+  }
+
+  .stack.is-linear .stack-overlay-copy {
+    gap: 0.45rem;
+    max-width: 100%;
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .stack.is-linear .stack-overlay-logo {
+    width: min(72vw, 24rem);
+  }
+
+  .stack.is-linear .stack-overlay-text {
+    font-size: clamp(1.05rem, 4.6vw, 1.6rem);
+    max-width: 16ch;
+  }
+
+  .stack.is-linear .stack-overlay-project {
+    width: auto;
+    min-height: 0;
+    justify-self: start;
+    text-align: left;
+    font-size: clamp(2rem, 10vw, 3.2rem);
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .stack.is-linear .stack-project-current,
+  .stack.is-linear .stack-project-next {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+
+  .stack.is-linear .stack-project-next {
+    display: none;
+  }
+
+  .stack.is-linear .stack-stage {
+    display: grid;
+    gap: 0.8rem;
+    padding: 0 var(--page-pad) 1.25rem;
+    background: #000;
+  }
+
+  .stack.is-linear .stack-card {
+    position: relative;
+    inset: auto;
+    top: auto;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 1rem;
+    transform: none;
+    transition: none;
+    overflow: hidden;
+  }
+
+  .stack.is-linear .stack-card iframe,
+  .stack.is-linear .stack-card video {
+    transform: none;
+  }
+
+  .stack.is-linear .stack-spacer {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-pad: 1.125rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --page-pad: 1.125rem;
   }
 }
 
