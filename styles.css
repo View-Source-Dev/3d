@@ -792,6 +792,91 @@ a {
     justify-content: flex-start;
     background: rgba(255, 255, 255, 0.04);
   }
+
+  .stack.is-linear {
+    padding-top: calc(var(--nav-offset) + var(--nav-height) + 1rem);
+    padding-bottom: calc(var(--footer-height) + 1.25rem);
+    background: #000;
+  }
+
+  .stack.is-linear .stack-pin {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .stack.is-linear .stack-overlay {
+    position: relative;
+    inset: auto;
+    min-height: 0;
+    align-content: start;
+    gap: 0.85rem;
+    padding:
+      0
+      var(--page-pad)
+      0;
+    background: #000;
+  }
+
+  .stack.is-linear .stack-overlay-copy {
+    max-width: 100%;
+    transform: none;
+    opacity: 1;
+    animation: none;
+  }
+
+  .stack.is-linear .stack-overlay-logo {
+    width: min(72vw, 18rem);
+  }
+
+  .stack.is-linear .stack-overlay-project {
+    position: relative;
+    width: min(100%, 10ch);
+    min-height: 0;
+    transform: none;
+    opacity: 1;
+    animation: none;
+  }
+
+  .stack.is-linear .stack-project-current,
+  .stack.is-linear .stack-project-next {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+
+  .stack.is-linear .stack-project-next {
+    display: none;
+  }
+
+  .stack.is-linear .stack-stage {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0 var(--page-pad);
+    background: #000;
+  }
+
+  .stack.is-linear .stack-card {
+    position: relative;
+    inset: auto;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 1rem;
+    transform: none;
+    transition: none;
+    overflow: hidden;
+  }
+
+  .stack.is-linear .stack-card iframe,
+  .stack.is-linear .stack-card video {
+    transform: none;
+  }
+
+  .stack.is-linear .stack-spacer {
+    display: none;
+  }
 }
 
 @media (min-width: 1024px) {
