@@ -8,7 +8,6 @@ const loaderBuckets = document.querySelector("#loaderBuckets");
 const loaderBarFill = document.querySelector(".loader-bar-fill");
 const whiteFlash = document.querySelector("#whiteFlash");
 const site = document.querySelector(".site");
-const stackProjectName = document.querySelector("#stackProjectName");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
 const clockNodes = Array.from(document.querySelectorAll("[data-clock]"));
@@ -57,33 +56,6 @@ const slides = [
   { name: "Lab", vimeoId: "1182987729" },
 ];
 
-const projectNames = slides.map((slide) => slide.name);
-
-let stackMotionFrame = null;
-let stackTargetProgress = 0;
-let currentStackProgress = 0;
-let activeProjectIndex = 0;
-let pendingProjectIndex = 0;
-let lastDominantIndex = 0;
-let titleFadeFrame = null;
-let titleFadePhase = "idle";
-let titleFadeStart = 0;
-let stackMaxProgress = 0;
-let stackStartOffset = 0;
-let vimeoScale = 1;
-let scrollSnapTimer = null;
-let isSnapping = false;
-<<<<<<< HEAD
-let viewportHeight = window.innerHeight || 1;
-let useLinearMobileLayout = false;
-let linearObserver = null;
-
-const INITIAL_PRELOAD_COUNT = 2;
-const FORWARD_PRELOAD_COUNT = 4;
-const VIDEO_START_OFFSET_SECONDS = 0.5;
-=======
->>>>>>> parent of d81a6f8 (Update script.js)
-
 function shuffle(list) {
   const copy = [...list];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -93,8 +65,20 @@ function shuffle(list) {
   return copy;
 }
 
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
+function buildVimeoSrc(vimeoId) {
+  const params = new URLSearchParams({
+    autoplay: "1",
+    muted: "1",
+    loop: "1",
+    background: "1",
+    autopause: "0",
+    playsinline: "1",
+    title: "0",
+    byline: "0",
+    portrait: "0",
+    dnt: "1",
+  });
+  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
 }
 
 function updateWorldClocks() {
@@ -113,133 +97,21 @@ function updateWorldClocks() {
   });
 }
 
-function buildVimeoSrc(vimeoId) {
-  const params = new URLSearchParams({
-    autoplay: "1",
-    muted: "1",
-    loop: "1",
-    background: "1",
-    autopause: "0",
-    playsinline: "1",
-    title: "0",
-    byline: "0",
-    portrait: "0",
-    dnt: "1",
-    api: "1",
-  });
-  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
-<<<<<<< HEAD
+function setActiveProject(name) {
+  if (stackProjectCurrent) {
+    stackProjectCurrent.textContent = name || "";
+  }
+  if (stackProjectNext) {
+    stackProjectNext.textContent = "";
+  }
 }
 
-function syncViewportHeight() {
-  viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-  document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
-}
-
-function shouldUseLinearMobileLayout() {
-  return window.matchMedia("(max-width: 768px) and (orientation: portrait)").matches;
-}
-
-function getStackFrames() {
-  return Array.from(stackStage?.querySelectorAll("iframe") || []);
-}
-
-function postToVimeo(frame, method, value) {
+function postToVimeo(frame, method) {
   if (!frame?.contentWindow) {
     return;
   }
 
-  const payload = value === undefined ? { method } : { method, value };
-  frame.contentWindow.postMessage(JSON.stringify(payload), "https://player.vimeo.com");
-}
-
-function ensureFrameLoaded(frame) {
-  if (!frame || frame.src || !frame.dataset.src) {
-    return;
-  }
-
-  frame.src = frame.dataset.src;
-  frame.loading = "eager";
-}
-
-function setFramePlaying(frame, shouldPlay) {
-  if (!frame) {
-    return;
-  }
-
-  frame.dataset.shouldPlay = shouldPlay ? "true" : "false";
-  if (!frame.src) {
-    return;
-  }
-
-  if (shouldPlay) {
-    postToVimeo(frame, "play");
-  } else {
-    postToVimeo(frame, "pause");
-  }
-}
-
-function preloadFramesThrough(index) {
-  const frames = getStackFrames();
-  const maxIndex = Math.min(index, frames.length - 1);
-
-  for (let frameIndex = 0; frameIndex <= maxIndex; frameIndex += 1) {
-    ensureFrameLoaded(frames[frameIndex]);
-  }
-}
-
-function setupLinearObserver() {
-  if (!stackStage) {
-    return;
-  }
-
-  linearObserver?.disconnect();
-  linearObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      const card = entry.target;
-      const frame = card.querySelector("iframe");
-      if (!frame) {
-        return;
-      }
-
-      if (entry.isIntersecting) {
-        ensureFrameLoaded(frame);
-      }
-
-      const shouldPlay = entry.isIntersecting && entry.intersectionRatio > 0.35;
-      setFramePlaying(frame, shouldPlay);
-
-      if (shouldPlay) {
-        const cardIndex = Number(card.dataset.stackIndex || 0);
-        activeProjectIndex = cardIndex;
-        pendingProjectIndex = cardIndex;
-        ensureActiveProjectTitle();
-      }
-    });
-  }, {
-    root: null,
-    rootMargin: "220px 0px",
-    threshold: [0, 0.35, 0.7],
-  });
-
-  stackStage.querySelectorAll(".stack-card").forEach((card) => {
-    linearObserver.observe(card);
-  });
-}
-
-function applyLayoutMode() {
-  useLinearMobileLayout = shouldUseLinearMobileLayout();
-  stack?.classList.toggle("is-linear", useLinearMobileLayout);
-
-  if (useLinearMobileLayout) {
-    preloadFramesThrough(Math.min(INITIAL_PRELOAD_COUNT - 1, slides.length - 1));
-    setupLinearObserver();
-  } else {
-    linearObserver?.disconnect();
-    linearObserver = null;
-  }
-=======
->>>>>>> parent of d81a6f8 (Update script.js)
+  frame.contentWindow.postMessage(JSON.stringify({ method }), "https://player.vimeo.com");
 }
 
 function setupLoaderBuckets() {
@@ -306,13 +178,7 @@ function syncLoaderBuckets(imageUrl, naturalWidth, naturalHeight) {
 
   orderedTiles.forEach((tile, index) => {
     const batch = Math.floor(index / 3);
-    const randomType = Math.random();
-    const offsetInBatch = randomType < 0.2
-      ? 240 + Math.floor(Math.random() * 180)
-      : randomType < 0.55
-        ? 90 + Math.floor(Math.random() * 120)
-        : Math.floor(Math.random() * 70);
-    const delay = (batch * 180) + Math.floor(offsetInBatch * 0.5);
+    const delay = batch * 180;
     maxDelay = Math.max(maxDelay, delay);
     tile.style.setProperty("--bucket-delay", `${delay}ms`);
 
@@ -342,29 +208,10 @@ function animateFakeLoaderBar(duration) {
   function tick(now) {
     const elapsed = now - start;
     const t = Math.min(elapsed / duration, 1);
-
-    let progress;
-    if (t < 0.18) {
-      progress = (t / 0.18) * 0.34;
-    } else if (t < 0.52) {
-      const local = (t - 0.18) / 0.34;
-      progress = 0.34 + (local * 0.28);
-    } else if (t < 0.82) {
-      const local = (t - 0.52) / 0.30;
-      progress = 0.62 + (local * 0.2);
-    } else {
-      const local = (t - 0.82) / 0.18;
-      progress = 0.82 + (local * 0.18);
-    }
-
-    const wobble = (Math.sin(t * 18) + Math.sin(t * 7)) * 0.006;
-    const clamped = Math.max(0, Math.min(1, progress + wobble));
-    loaderBarFill.style.width = `${clamped * 100}%`;
+    loaderBarFill.style.width = `${t * 100}%`;
 
     if (t < 1) {
       requestAnimationFrame(tick);
-    } else {
-      loaderBarFill.style.width = "100%";
     }
   }
 
@@ -377,13 +224,11 @@ function buildStack() {
     return;
   }
 
-  const slideCount = slides.length || 1;
-  const slots = Array.from({ length: slideCount }, (_, index) => slides[index]);
+  stack.classList.add("is-linear");
 
-  slots.forEach((asset, index) => {
+  slides.forEach((asset, index) => {
     const card = document.createElement("div");
     card.className = "stack-card";
-    card.style.zIndex = "1";
     card.dataset.stackIndex = String(index);
     card.dataset.projectName = asset.name;
 
@@ -391,26 +236,11 @@ function buildStack() {
     iframe.className = "stack-video";
     iframe.dataset.src = buildVimeoSrc(asset.vimeoId);
     iframe.title = asset.name;
-    iframe.loading = "lazy";
+    iframe.loading = index < 3 ? "eager" : "lazy";
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
-<<<<<<< HEAD
-    iframe.dataset.startOffsetApplied = "false";
-    iframe.dataset.shouldPlay = index < 2 ? "true" : "false";
-    iframe.addEventListener("load", () => {
-      window.setTimeout(() => {
-        if (iframe.dataset.startOffsetApplied !== "true") {
-          postToVimeo(iframe, "setCurrentTime", VIDEO_START_OFFSET_SECONDS);
-          iframe.dataset.startOffsetApplied = "true";
-        }
-        setFramePlaying(iframe, iframe.dataset.shouldPlay === "true");
-      }, 240);
-    });
-    if (index < INITIAL_PRELOAD_COUNT) {
-=======
-    if (index < 2) {
->>>>>>> parent of d81a6f8 (Update script.js)
+    if (index < 3) {
       iframe.src = iframe.dataset.src;
     }
 
@@ -419,281 +249,39 @@ function buildStack() {
   });
 }
 
-function setTitleState(currentOpacity, nextOpacity, currentShift, nextShift, currentVisible, nextVisible) {
-  if (!stackProjectName) {
-    return;
-  }
-
-  stackProjectName.style.setProperty("--project-opacity-current", `${currentOpacity.toFixed(3)}`);
-  stackProjectName.style.setProperty("--project-opacity-next", `${nextOpacity.toFixed(3)}`);
-  stackProjectName.style.setProperty("--project-shift-current", `${currentShift.toFixed(1)}px`);
-  stackProjectName.style.setProperty("--project-shift-next", `${nextShift.toFixed(1)}px`);
-  stackProjectName.style.setProperty("--project-visibility-current", currentVisible ? "visible" : "hidden");
-  stackProjectName.style.setProperty("--project-visibility-next", nextVisible ? "visible" : "hidden");
-}
-
-function ensureActiveProjectTitle() {
-  if (stackProjectCurrent) {
-    stackProjectCurrent.textContent = projectNames[activeProjectIndex] || "";
-  }
-  if (stackProjectNext) {
-    stackProjectNext.textContent = projectNames[pendingProjectIndex] || "";
-  }
-  setTitleState(1, 0, 0, 28, true, false);
-}
-
-function stepTitleFade(now) {
-  const elapsed = now - titleFadeStart;
-
-  if (titleFadePhase === "out") {
-    const progress = clamp(elapsed / 140, 0, 1);
-    setTitleState(1 - progress, 0, -28 * progress, 28, progress < 0.98, false);
-
-    if (progress >= 1) {
-      activeProjectIndex = pendingProjectIndex;
-      if (stackProjectCurrent) {
-        stackProjectCurrent.textContent = projectNames[activeProjectIndex] || "";
-      }
-      titleFadePhase = "in";
-      titleFadeStart = now;
-      setTitleState(0, 0, 28, 28, true, false);
-      titleFadeFrame = requestAnimationFrame(stepTitleFade);
-      return;
-    }
-  } else if (titleFadePhase === "in") {
-    const progress = clamp(elapsed / 180, 0, 1);
-    setTitleState(progress, 0, 28 * (1 - progress), 28, true, false);
-
-    if (progress >= 1) {
-      titleFadePhase = "idle";
-      titleFadeFrame = null;
-      return;
-    }
-  }
-
-  titleFadeFrame = requestAnimationFrame(stepTitleFade);
-}
-
-function transitionProjectTitle(targetIndex) {
-  if (!stackProjectCurrent || !stackProjectNext) {
-    return;
-  }
-
-  const currentName = projectNames[activeProjectIndex] || "";
-  const targetName = projectNames[targetIndex] || "";
-  if (targetName && targetName === currentName) {
-    pendingProjectIndex = targetIndex;
-    ensureActiveProjectTitle();
-    return;
-  }
-
-  if (targetIndex === activeProjectIndex && titleFadePhase === "idle") {
-    ensureActiveProjectTitle();
-    return;
-  }
-
-  if (targetIndex === pendingProjectIndex && titleFadePhase !== "idle") {
-    return;
-  }
-
-  pendingProjectIndex = targetIndex;
-  stackProjectNext.textContent = projectNames[pendingProjectIndex] || "";
-
-  if (titleFadeFrame) {
-    cancelAnimationFrame(titleFadeFrame);
-    titleFadeFrame = null;
-  }
-
-  titleFadePhase = "out";
-  titleFadeStart = performance.now();
-  titleFadeFrame = requestAnimationFrame(stepTitleFade);
-}
-
-function updateStackMotion() {
+function setupLinearPlayback() {
   if (!stackStage) {
     return;
   }
 
-  const cards = Array.from(stackStage.querySelectorAll(".stack-card"));
-  const cardCount = cards.length;
-  if (!cardCount) {
-    return;
-  }
-
-  if (useLinearMobileLayout) {
-    cards.forEach((card) => {
-      card.style.zIndex = "1";
-      card.style.setProperty("--stack-y", "0%");
-    });
-    return;
-  }
-
-  const clampedProgress = clamp(currentStackProgress, 0, Math.max(0, cardCount - 1));
-  const currentIndex = Math.floor(clampedProgress);
-  const nextIndex = Math.min(currentIndex + 1, cardCount - 1);
-  const transitionProgress = clampedProgress - currentIndex;
-  const eased = 1 - Math.pow(1 - transitionProgress, 2.8);
-
-  cards.forEach((card, index) => {
-    let translateY = 100;
-    let zIndex = 1;
-
-    if (index === currentIndex) {
-      translateY = 0;
-      zIndex = 2;
-    }
-
-    if (index === nextIndex) {
-      translateY = (1 - eased) * 100;
-      zIndex = 3;
-    }
-
-    if (translateY < 2.2) {
-      translateY = 0;
-    }
-
-    if (translateY > 97.8) {
-      translateY = 100;
-    }
-
-    card.style.zIndex = String(zIndex);
-    card.style.setProperty("--stack-y", `${translateY}%`);
-  });
-
-  const dominantIndex = transitionProgress >= 0.5 ? nextIndex : currentIndex;
-  if (dominantIndex !== lastDominantIndex) {
-    if ((dominantIndex === nextIndex && transitionProgress >= 0.55)
-      || (dominantIndex === currentIndex && transitionProgress <= 0.45)) {
-      lastDominantIndex = dominantIndex;
-      transitionProjectTitle(dominantIndex);
-    }
-  } else if (titleFadePhase === "idle") {
-    ensureActiveProjectTitle();
-  }
-
-  const dominantCoverage = transitionProgress >= 0.5 ? transitionProgress : 1 - transitionProgress;
-  const subtitleOpacity = dominantCoverage >= 0.5 ? 1 : 0.85;
-  document.documentElement.style.setProperty("--subtitle-opacity", `${subtitleOpacity.toFixed(3)}`);
-
-  cards.forEach((card, index) => {
-    const frame = card.querySelector("iframe");
-    if (!frame) {
-      return;
-    }
-    const prevIndex = Math.max(0, currentIndex - 1);
-    const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
-    const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
-<<<<<<< HEAD
-    const shouldPlay = index === currentIndex || index === nextIndex;
-    if (shouldLoad) {
-      ensureFrameLoaded(frame);
-      setFramePlaying(frame, shouldPlay);
-      if (shouldPlay) {
-        frame.removeAttribute("data-paused");
-      } else {
-        frame.setAttribute("data-paused", "true");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      const card = entry.target;
+      const frame = card.querySelector("iframe");
+      if (!frame) {
+        return;
       }
-    } else if (frame.src) {
-      setFramePlaying(frame, false);
-=======
-    if (shouldLoad) {
-      if (!frame.src && frame.dataset.src) {
+
+      if (entry.isIntersecting && !frame.src && frame.dataset.src) {
         frame.src = frame.dataset.src;
-        frame.loading = "eager";
       }
-      frame.removeAttribute("data-paused");
-    } else if (frame.src) {
->>>>>>> parent of d81a6f8 (Update script.js)
-      frame.removeAttribute("src");
-      frame.setAttribute("data-paused", "true");
-    }
+
+      if (entry.isIntersecting && entry.intersectionRatio > 0.45) {
+        postToVimeo(frame, "play");
+        setActiveProject(card.dataset.projectName || "");
+      } else if (frame.src) {
+        postToVimeo(frame, "pause");
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: "220px 0px",
+    threshold: [0, 0.45, 0.8],
   });
-<<<<<<< HEAD
 
-  preloadFramesThrough(Math.min(nextIndex + 1, cardCount - 1));
-=======
->>>>>>> parent of d81a6f8 (Update script.js)
-}
-
-function stepStackMotion() {
-  currentStackProgress += (stackTargetProgress - currentStackProgress) * 0.06;
-
-  if (Math.abs(stackTargetProgress - currentStackProgress) < 0.001) {
-    currentStackProgress = stackTargetProgress;
-  }
-
-  updateStackMotion();
-
-  if (Math.abs(stackTargetProgress - currentStackProgress) >= 0.001) {
-    stackMotionFrame = requestAnimationFrame(stepStackMotion);
-  } else {
-    stackMotionFrame = null;
-  }
-}
-
-function queueStackMotion() {
-  if (stackMotionFrame) {
-    return;
-  }
-
-  stackMotionFrame = requestAnimationFrame(stepStackMotion);
-}
-
-function updateStackFromScroll() {
-  if (!site?.classList.contains("is-visible")) {
-    return;
-  }
-
-  if (useLinearMobileLayout) {
-    return;
-  }
-
-  const scrollY = window.scrollY || window.pageYOffset || 0;
-  if (scrollY > stackStartOffset + (stackMaxProgress * viewportHeight)) {
-    window.scrollTo(0, stackStartOffset + (stackMaxProgress * viewportHeight));
-    return;
-  }
-  const local = scrollY - stackStartOffset;
-  const rawProgress = local / Math.max(1, viewportHeight);
-  stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
-  queueStackMotion();
-
-  if (scrollSnapTimer) {
-    window.clearTimeout(scrollSnapTimer);
-  }
-  scrollSnapTimer = window.setTimeout(() => {
-    snapToNearestSlide();
-  }, 2000);
-}
-
-function snapToNearestSlide() {
-  if (useLinearMobileLayout || isSnapping || !site?.classList.contains("is-visible")) {
-    return;
-  }
-
-  const scrollY = window.scrollY || window.pageYOffset || 0;
-  const local = scrollY - stackStartOffset;
-  const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
-  const targetIndex = Math.round(progress);
-  const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
-
-  if (Math.abs(targetScroll - scrollY) < 1) {
-    return;
-  }
-
-  isSnapping = true;
-  window.scrollTo({ top: targetScroll, behavior: "smooth" });
-  window.setTimeout(() => {
-    isSnapping = false;
-  }, 420);
-}
-
-function updateVimeoScale() {
-  const viewportAspect = window.innerWidth / Math.max(1, viewportHeight);
-  const baseAspect = 16 / 9;
-  const scale = Math.max(viewportAspect / baseAspect, baseAspect / viewportAspect);
-  vimeoScale = Math.max(1, scale);
-  document.documentElement.style.setProperty("--vimeo-scale", vimeoScale.toFixed(4));
+  stackStage.querySelectorAll(".stack-card").forEach((card) => {
+    observer.observe(card);
+  });
 }
 
 function runIntro() {
@@ -703,107 +291,50 @@ function runIntro() {
   }
 
   setupLoaderBuckets();
-  const introCandidates = stillAssets.filter((asset) => /\.(png|jpe?g|webp|gif)$/i.test(asset.src));
-  const introPool = introCandidates.length ? introCandidates : stillAssets;
-  const shuffled = shuffle(introPool);
+  const introPool = shuffle(stillAssets.filter((asset) => /\.(png|jpe?g|webp|gif)$/i.test(asset.src)));
+  const previewAsset = introPool[0];
 
-  const tryLoad = (index = 0) => {
-    const previewAsset = shuffled[index] || introPool[0];
-    if (!previewAsset) {
-      site?.classList.add("is-visible");
-      return;
-    }
-    const previewSrc = previewAsset.type === "video" ? previewAsset.poster : previewAsset.src;
-    const loaderImageAsset = new Image();
+  if (!previewAsset) {
+    site.classList.add("is-visible");
+    return;
+  }
 
-    loaderImageAsset.onload = () => {
-      const duration = syncLoaderBuckets(previewSrc, loaderImageAsset.naturalWidth, loaderImageAsset.naturalHeight);
-      loaderImage.src = previewSrc;
-      loaderFrame.classList.add("is-loading");
-      loaderBar.classList.add("is-loading");
-      animateFakeLoaderBar(duration);
+  const loaderImageAsset = new Image();
+  loaderImageAsset.onload = () => {
+    const duration = syncLoaderBuckets(previewAsset.src, loaderImageAsset.naturalWidth, loaderImageAsset.naturalHeight);
+    loaderImage.src = previewAsset.src;
+    loaderFrame.classList.add("is-loading");
+    loaderBar.classList.add("is-loading");
+    animateFakeLoaderBar(duration);
+
+    window.setTimeout(() => {
+      loaderFrame.classList.remove("is-loading");
+      loaderFrame.classList.add("is-resolved");
+      loaderBar.classList.remove("is-loading");
+      loaderBar.classList.add("is-resolved");
 
       window.setTimeout(() => {
-        loaderFrame.classList.remove("is-loading");
-        loaderFrame.classList.add("is-resolved");
-        loaderBar.classList.remove("is-loading");
-        loaderBar.classList.add("is-resolved");
-
+        whiteFlash?.classList.add("is-visible");
         window.setTimeout(() => {
-          whiteFlash?.classList.add("is-visible");
+          loader.classList.add("is-hidden");
+          site.classList.add("is-visible");
           window.setTimeout(() => {
-            loader.classList.add("is-hidden");
-            site.classList.add("is-visible");
-            window.scrollTo(0, 0);
-            stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
-            window.setTimeout(() => {
-              whiteFlash?.classList.remove("is-visible");
-            }, 220);
-            updateStackFromScroll();
-          }, 180);
-        }, 2200);
-      }, duration);
-    };
-
-    loaderImageAsset.onerror = () => {
-      if (index + 1 < shuffled.length) {
-        tryLoad(index + 1);
-      } else {
-        site?.classList.add("is-visible");
-      }
-    };
-
-    loaderImageAsset.src = previewSrc;
+            whiteFlash?.classList.remove("is-visible");
+          }, 220);
+        }, 180);
+      }, 1200);
+    }, duration);
   };
 
-  tryLoad(0);
+  loaderImageAsset.onerror = () => {
+    site.classList.add("is-visible");
+  };
+  loaderImageAsset.src = previewAsset.src;
 }
 
 buildStack();
-stackMaxProgress = Math.max(0, slides.length - 1);
-document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
-<<<<<<< HEAD
-syncViewportHeight();
-applyLayoutMode();
-=======
->>>>>>> parent of d81a6f8 (Update script.js)
-updateVimeoScale();
-if ("scrollRestoration" in window.history) {
-  window.history.scrollRestoration = "manual";
-}
-
+setActiveProject(slides[0]?.name || "");
+setupLinearPlayback();
 runIntro();
 updateWorldClocks();
 window.setInterval(updateWorldClocks, 30000);
-window.scrollTo(0, 0);
-currentStackProgress = 0;
-stackTargetProgress = 0;
-activeProjectIndex = 0;
-pendingProjectIndex = 0;
-ensureActiveProjectTitle();
-lastDominantIndex = 0;
-updateStackMotion();
-
-window.addEventListener("scroll", updateStackFromScroll, { passive: true });
-window.addEventListener("load", () => {
-  window.scrollTo(0, 0);
-  syncViewportHeight();
-  applyLayoutMode();
-  stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
-  currentStackProgress = 0;
-  stackTargetProgress = 0;
-  activeProjectIndex = 0;
-  pendingProjectIndex = 0;
-  ensureActiveProjectTitle();
-  updateStackMotion();
-  updateStackFromScroll();
-  updateVimeoScale();
-});
-
-window.addEventListener("resize", () => {
-  syncViewportHeight();
-  applyLayoutMode();
-  stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
-  updateStackFromScroll();
-  updateVimeoScale();
-});

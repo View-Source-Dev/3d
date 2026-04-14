@@ -288,36 +288,34 @@ a {
 }
 
 .stack {
-  padding: 0;
   position: relative;
-  min-height: var(--stack-screen-height);
-  padding-bottom: 0;
+  min-height: 100%;
+  background: #000;
 }
 
 .stack-pin {
-  position: sticky;
-  top: 0;
-  height: var(--stack-screen-height);
-  overflow: hidden;
+  position: relative;
+  min-height: 100%;
+  overflow: visible;
 }
 
 .stack-spacer {
-  height: calc(var(--stack-count, 1) * var(--stack-screen-height));
+  display: none;
 }
 
 .stack-stage {
   position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   background: #000;
+  display: grid;
+  gap: 0;
 }
 
 .stack-overlay {
-  position: absolute;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  min-height: var(--stack-screen-height);
   z-index: 20;
   display: grid;
   grid-template-columns: minmax(320px, 1fr) minmax(180px, auto);
@@ -378,23 +376,21 @@ a {
 
 .stack-project-current,
 .stack-project-next {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  inset: auto;
   display: block;
   transition: none;
   will-change: opacity, transform;
 }
 
 .stack-project-current {
-  opacity: var(--project-opacity-current, 1);
-  visibility: var(--project-visibility-current, visible);
-  transform: translateY(var(--project-shift-current, 0));
+  opacity: 1;
+  visibility: visible;
+  transform: none;
 }
 
 .stack-project-next {
-  opacity: var(--project-opacity-next, 0);
-  visibility: var(--project-visibility-next, hidden);
-  transform: translateY(var(--project-shift-next, 14px));
+  display: none;
 }
 
 .site.is-visible .stack-overlay-copy,
@@ -403,22 +399,16 @@ a {
 }
 
 .stack-card {
-  position: absolute;
-  inset: 0;
-  top: 0;
+  position: relative;
   width: 100%;
   height: var(--stack-screen-height);
   overflow: hidden;
   background: #000;
-  transform: translate3d(0, var(--stack-y, 100%), 0);
-  will-change: transform;
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .stack-card video,
 .stack-card iframe {
-  position: absolute;
-  inset: 0;
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -571,6 +561,7 @@ a {
     padding: 1.1rem;
     grid-template-columns: 1fr;
     gap: 1rem;
+    align-items: start;
   }
 
   .stack-overlay-copy {
@@ -585,10 +576,6 @@ a {
     justify-self: start;
     text-align: left;
     width: auto;
-  }
-
-  .stack-card {
-    height: var(--stack-screen-height);
   }
 
   .clock-bar-inner {
@@ -607,10 +594,10 @@ a {
   }
 
   .stack {
-    min-height: auto;
     background: #000;
   }
 
+  .stack-pin,
   .stack.is-linear .stack-pin {
     position: relative;
     top: auto;
@@ -618,9 +605,11 @@ a {
     overflow: visible;
   }
 
+  .stack-overlay,
   .stack.is-linear .stack-overlay {
     position: relative;
     inset: auto;
+    min-height: 0;
     display: grid;
     grid-template-columns: 1fr;
     gap: 0.85rem;
@@ -629,6 +618,7 @@ a {
     background: #000;
   }
 
+  .stack-overlay-copy,
   .stack.is-linear .stack-overlay-copy {
     gap: 0.45rem;
     max-width: 100%;
@@ -637,15 +627,18 @@ a {
     animation: none;
   }
 
+  .stack-overlay-logo,
   .stack.is-linear .stack-overlay-logo {
     width: min(72vw, 24rem);
   }
 
+  .stack-overlay-text,
   .stack.is-linear .stack-overlay-text {
     font-size: clamp(1.05rem, 4.6vw, 1.6rem);
     max-width: 16ch;
   }
 
+  .stack-overlay-project,
   .stack.is-linear .stack-overlay-project {
     width: auto;
     min-height: 0;
@@ -657,6 +650,8 @@ a {
     animation: none;
   }
 
+  .stack-project-current,
+  .stack-project-next,
   .stack.is-linear .stack-project-current,
   .stack.is-linear .stack-project-next {
     position: relative;
@@ -664,10 +659,12 @@ a {
     transform: none;
   }
 
+  .stack-project-next,
   .stack.is-linear .stack-project-next {
     display: none;
   }
 
+  .stack-stage,
   .stack.is-linear .stack-stage {
     display: grid;
     gap: 0.8rem;
@@ -675,6 +672,7 @@ a {
     background: #000;
   }
 
+  .stack-card,
   .stack.is-linear .stack-card {
     position: relative;
     inset: auto;
@@ -682,16 +680,17 @@ a {
     height: auto;
     aspect-ratio: 1 / 1;
     border-radius: 1rem;
-    transform: none;
-    transition: none;
     overflow: hidden;
   }
 
+  .stack-card iframe,
+  .stack-card video,
   .stack.is-linear .stack-card iframe,
   .stack.is-linear .stack-card video {
     transform: none;
   }
 
+  .stack-spacer,
   .stack.is-linear .stack-spacer {
     display: none;
   }
