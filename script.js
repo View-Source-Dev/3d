@@ -76,12 +76,10 @@ let isSnapping = false;
 let viewportHeight = window.innerHeight || 1;
 let useLinearMobileLayout = false;
 let linearObserver = null;
-let wheelDeltaBuffer = 0;
 
 const INITIAL_PRELOAD_COUNT = 2;
 const FORWARD_PRELOAD_COUNT = 4;
 const VIDEO_START_OFFSET_SECONDS = 0.5;
-const WHEEL_TRIGGER_THRESHOLD = 36;
 
 function shuffle(list) {
   const copy = [...list];
@@ -637,6 +635,13 @@ function updateStackFromScroll() {
   const rawProgress = local / Math.max(1, window.innerHeight);
   stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
   queueStackMotion();
+
+  if (scrollSnapTimer) {
+    window.clearTimeout(scrollSnapTimer);
+  }
+  scrollSnapTimer = window.setTimeout(() => {
+    snapToNearestSlide();
+  }, 2000);
 }
 
 function snapToNearestSlide() {
@@ -659,19 +664,6 @@ function snapToNearestSlide() {
   window.setTimeout(() => {
     isSnapping = false;
   }, 420);
-}
-
-function moveToSlide(targetIndex) {
-  const clampedIndex = clamp(targetIndex, 0, stackMaxProgress);
-  const targetScroll = stackStartOffset + (clampedIndex * window.innerHeight);
-
-  isSnapping = true;
-  wheelDeltaBuffer = 0;
-  window.scrollTo({ top: targetScroll, behavior: "smooth" });
-  window.setTimeout(() => {
-    isSnapping = false;
-    updateStackFromScroll();
-  }, 460);
 }
 
 function updateVimeoScale() {
@@ -768,26 +760,6 @@ lastDominantIndex = 0;
 updateStackMotion();
 
 window.addEventListener("scroll", updateStackFromScroll, { passive: true });
-window.addEventListener("wheel", (event) => {
-  if (useLinearMobileLayout || !site?.classList.contains("is-visible")) {
-    return;
-  }
-
-  event.preventDefault();
-
-  if (isSnapping) {
-    return;
-  }
-
-  wheelDeltaBuffer += event.deltaY;
-  if (Math.abs(wheelDeltaBuffer) < WHEEL_TRIGGER_THRESHOLD) {
-    return;
-  }
-
-  const direction = wheelDeltaBuffer > 0 ? 1 : -1;
-  const currentIndex = Math.round(stackTargetProgress);
-  moveToSlide(currentIndex + direction);
-}, { passive: false });
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
   syncViewportHeight();
