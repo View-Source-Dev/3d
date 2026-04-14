@@ -202,11 +202,8 @@ function syncPlaybackWindow(centerIndex) {
 }
 
 function syncPlaybackProgress(currentIndex, nextIndex, fraction) {
-  const playNext = fraction > 0.02;
-  const playing = new Set([currentIndex]);
-  if (playNext) {
-    playing.add(nextIndex);
-  }
+  const previousIndex = wrapIndex(currentIndex - 1);
+  const playing = new Set([previousIndex, currentIndex, nextIndex]);
 
   state.cards.forEach((card, index) => {
     const frame = card.querySelector("iframe");
