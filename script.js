@@ -60,16 +60,17 @@ const state = {
   cards: [],
   mode: "desktop",
   activeIndex: 0,
+  currentProgress: 0,
+  targetProgress: 0,
+  animationFrame: 0,
   resizeTimer: 0,
   mobileObserver: null,
   desktopTouchActive: false,
   desktopTouchY: 0,
-  wheelDelta: 0,
-  transitioning: false,
-  autoAdvanceTimer: 0,
   warmupTimer: 0,
   warmupIndex: 0,
   lastGestureAt: 0,
+  lastFrameAt: 0,
 };
 
 function shuffle(list) {
@@ -87,6 +88,10 @@ function clamp(value, min, max) {
 
 function wrapIndex(index) {
   return (index + slides.length) % slides.length;
+}
+
+function mod(value, divisor) {
+  return ((value % divisor) + divisor) % divisor;
 }
 
 function buildVimeoSrc(vimeoId) {
@@ -132,17 +137,6 @@ function setActiveProject(name) {
   if (stackProjectNext) {
     stackProjectNext.textContent = "";
   }
-}
-
-function resetAutoAdvanceTimer() {
-  window.clearTimeout(state.autoAdvanceTimer);
-  if (state.mode !== "desktop") {
-    return;
-  }
-
-  state.autoAdvanceTimer = window.setTimeout(() => {
-    transitionDesktop(1, true);
-  }, 3200);
 }
 
 function postToVimeo(frame, method) {
@@ -211,72 +205,87 @@ function syncStackMetrics() {
   document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
 }
 
-function setCardState(card, nextState, motion = "") {
-  card.dataset.cardState = nextState;
-  if (motion) {
-    card.dataset.cardMotion = motion;
-  } else {
+function updateDesktopCards(progress) {
+  const count = slides.length;
+  const wrapped = mod(progress, count);
+  const baseIndex = Math.floor(wrapped);
+  const fraction = wrapped - baseIndex;
+  const nextIndex = wrapIndex(baseIndex + 1);
+  const prevIndex = wrapIndex(baseIndex - 1);
+
+  state.cards.forEach((card) => {
+    delete card.dataset.cardState;
     delete card.dataset.cardMotion;
+    card.style.opacity = "0";
+    card.style.zIndex = "0";
+    card.style.transform = "translate3d(0, 0, 0) scale(1)";
+    card.style.clipPath = "inset(0 0 0 0)";
+  });
+
+  const currentCard = state.cards[baseIndex];
+  const nextCard = state.cards[nextIndex];
+  const prevCard = state.cards[prevIndex];
+
+  ensureFrameLoaded(currentCard);
+  ensureFrameLoaded(nextCard);
+  ensureFrameLoaded(prevCard);
+
+  if (currentCard) {
+    currentCard.style.opacity = "1";
+    currentCard.style.zIndex = "2";
+    currentCard.style.transform = `translate3d(${fraction * 0.9}%, 0, 0) scale(${1 - fraction * 0.01})`;
+  }
+
+  if (nextCard) {
+    nextCard.style.opacity = "1";
+    nextCard.style.zIndex = "3";
+    nextCard.style.clipPath = `inset(0 ${Math.max(0, (1 - fraction) * 100)}% 0 0)`;
+    nextCard.style.transform = `translate3d(${-1.8 + fraction * 1.8}%, 0, 0) scale(${1.01 - fraction * 0.01})`;
+  }
+
+  if (prevCard && fraction < 0.015) {
+    prevCard.style.opacity = "1";
+    prevCard.style.zIndex = "1";
+  }
+
+  if (baseIndex !== state.activeIndex) {
+    state.activeIndex = baseIndex;
+    setActiveProject(slides[baseIndex]?.name || "");
+    syncPlaybackWindow(baseIndex);
   }
 }
 
-function renderDesktopDeck() {
-  const activeIndex = state.activeIndex;
-  const nextIndex = wrapIndex(activeIndex + 1);
-  const prevIndex = wrapIndex(activeIndex - 1);
-
-  state.cards.forEach((card, index) => {
-    let nextState = "hidden";
-    if (index === activeIndex) {
-      nextState = "active";
-    } else if (index === nextIndex) {
-      nextState = "next";
-    } else if (index === prevIndex) {
-      nextState = "prev";
-    }
-
-    setCardState(card, nextState);
-  });
-}
-
-function transitionDesktop(direction, isAutoAdvance = false) {
+function stepDesktopAnimation(now) {
   if (state.mode !== "desktop") {
+    state.animationFrame = 0;
     return;
   }
 
-  if (state.transitioning) {
+  const previousTime = state.lastFrameAt || now;
+  const deltaMs = now - previousTime;
+  state.lastFrameAt = now;
+
+  if (now - state.lastGestureAt > 2600) {
+    state.targetProgress += deltaMs * 0.00012;
+  }
+
+  const difference = state.targetProgress - state.currentProgress;
+  state.currentProgress += difference * 0.12;
+
+  if (Math.abs(difference) < 0.0001 && now - state.lastGestureAt <= 2600) {
+    state.currentProgress = state.targetProgress;
+  }
+
+  updateDesktopCards(state.currentProgress);
+  state.animationFrame = window.requestAnimationFrame(stepDesktopAnimation);
+}
+
+function startDesktopAnimation() {
+  if (state.animationFrame) {
     return;
   }
-
-  if (!isAutoAdvance) {
-    resetAutoAdvanceTimer();
-  }
-
-  const outgoingIndex = state.activeIndex;
-  const incomingIndex = wrapIndex(outgoingIndex + direction);
-  const outgoingCard = state.cards[outgoingIndex];
-  const incomingCard = state.cards[incomingIndex];
-  const incomingMotion = direction > 0 ? "reveal-next" : "reveal-prev";
-
-  ensureFrameLoaded(incomingCard);
-  ensureFrameLoaded(state.cards[wrapIndex(incomingIndex + direction)]);
-  renderDesktopDeck();
-
-  state.transitioning = true;
-
-  window.requestAnimationFrame(() => {
-    setCardState(outgoingCard, "active");
-    setCardState(incomingCard, "active", incomingMotion);
-  });
-
-  window.setTimeout(() => {
-    state.activeIndex = incomingIndex;
-    state.transitioning = false;
-    renderDesktopDeck();
-    setActiveProject(slides[incomingIndex]?.name || "");
-    syncPlaybackWindow(incomingIndex);
-    resetAutoAdvanceTimer();
-  }, 430);
+  state.lastFrameAt = 0;
+  state.animationFrame = window.requestAnimationFrame(stepDesktopAnimation);
 }
 
 function handleDesktopWheel(event) {
@@ -286,16 +295,8 @@ function handleDesktopWheel(event) {
 
   event.preventDefault();
   state.lastGestureAt = performance.now();
-  state.wheelDelta += event.deltaY;
-  resetAutoAdvanceTimer();
-
-  if (state.transitioning || Math.abs(state.wheelDelta) < 10) {
-    return;
-  }
-
-  const direction = state.wheelDelta > 0 ? 1 : -1;
-  state.wheelDelta = 0;
-  transitionDesktop(direction);
+  state.targetProgress += event.deltaY * 0.0036;
+  startDesktopAnimation();
 }
 
 function handleDesktopTouchStart(event) {
@@ -319,15 +320,8 @@ function handleDesktopTouchMove(event) {
   state.desktopTouchY = nextY;
   event.preventDefault();
   state.lastGestureAt = performance.now();
-  resetAutoAdvanceTimer();
-
-  if (Math.abs(deltaY) < 6) {
-    return;
-  }
-
-  const direction = deltaY > 0 ? 1 : -1;
-  transitionDesktop(direction);
-  state.desktopTouchActive = false;
+  state.targetProgress += deltaY * 0.01;
+  startDesktopAnimation();
 }
 
 function handleDesktopTouchEnd() {
@@ -374,28 +368,31 @@ function applyDesktopLayout() {
   state.mode = "desktop";
   stack?.classList.remove("is-linear");
   document.body.classList.add("is-fixed-stack");
-  state.wheelDelta = 0;
   teardownMobileObserver();
   syncStackMetrics();
-  state.transitioning = false;
-  renderDesktopDeck();
+  state.currentProgress = mod(state.currentProgress, slides.length);
+  state.targetProgress = mod(state.targetProgress || state.currentProgress, slides.length);
+  updateDesktopCards(state.currentProgress);
   setActiveProject(slides[state.activeIndex]?.name || "");
   syncPlaybackWindow(state.activeIndex);
-  resetAutoAdvanceTimer();
+  startDesktopAnimation();
 }
 
 function applyMobileLayout() {
   state.mode = "mobile";
   stack?.classList.add("is-linear");
   document.body.classList.remove("is-fixed-stack");
-  window.clearTimeout(state.autoAdvanceTimer);
+  if (state.animationFrame) {
+    window.cancelAnimationFrame(state.animationFrame);
+    state.animationFrame = 0;
+  }
   state.cards.forEach((card) => {
     delete card.dataset.cardState;
     delete card.dataset.cardMotion;
     card.style.removeProperty("transform");
     card.style.removeProperty("opacity");
     card.style.removeProperty("z-index");
-    card.style.removeProperty("--card-dim");
+    card.style.removeProperty("clip-path");
   });
   setupMobileObserver();
 }
