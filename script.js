@@ -77,7 +77,7 @@ let viewportHeight = window.innerHeight || 1;
 let useLinearMobileLayout = false;
 let linearObserver = null;
 
-const INITIAL_PRELOAD_COUNT = 4;
+const INITIAL_PRELOAD_COUNT = 2;
 const FORWARD_PRELOAD_COUNT = 4;
 const VIDEO_START_OFFSET_SECONDS = 0.5;
 
@@ -572,8 +572,8 @@ function updateStackMotion() {
       return;
     }
     const prevIndex = Math.max(0, currentIndex - 1);
-    const forwardIndex = Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1);
-    const shouldLoad = index >= prevIndex && index <= forwardIndex;
+    const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
+    const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
     const shouldPlay = index === currentIndex || index === nextIndex;
     if (shouldLoad) {
       ensureFrameLoaded(frame);
@@ -585,11 +585,12 @@ function updateStackMotion() {
       }
     } else if (frame.src) {
       setFramePlaying(frame, false);
+      frame.removeAttribute("src");
       frame.setAttribute("data-paused", "true");
     }
   });
 
-  preloadFramesThrough(Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1));
+  preloadFramesThrough(Math.min(nextIndex + 1, cardCount - 1));
 }
 
 function stepStackMotion() {
