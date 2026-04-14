@@ -31,8 +31,30 @@
     </div>
     <div class="white-flash" id="whiteFlash" aria-hidden="true"></div>
 
+    <header class="site-nav" aria-label="Primary">
+      <a class="site-nav-home" href="#work" aria-label="Jump to projects">
+        <img src="logo.svg" alt="" />
+      </a>
+      <button
+        class="site-nav-toggle"
+        id="siteNavToggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="siteNavPanel"
+        aria-label="Toggle navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="site-nav-panel" id="siteNavPanel">
+        <a class="site-nav-link" href="#work">Projects</a>
+        <a class="site-nav-link" href="https://view-source.com/" target="_blank" rel="noreferrer">view-source.com</a>
+      </div>
+    </header>
+
     <main class="site">
-      <section class="stack" aria-label="Video stack">
+      <section class="stack" id="work" aria-label="Video stack">
         <div class="stack-pin">
           <div class="stack-overlay" aria-hidden="true">
             <div class="stack-overlay-copy">

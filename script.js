@@ -11,6 +11,8 @@ const site = document.querySelector(".site");
 const stackProjectName = document.querySelector("#stackProjectName");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
+const siteNavToggle = document.querySelector("#siteNavToggle");
+const siteNavPanel = document.querySelector("#siteNavPanel");
 const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 const stillAssets = [
@@ -72,6 +74,7 @@ let stackStartOffset = 0;
 let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
+let viewportHeight = window.innerHeight || 1;
 
 function shuffle(list) {
   const copy = [...list];
@@ -100,6 +103,25 @@ function buildVimeoSrc(vimeoId) {
     dnt: "1",
   });
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
+}
+
+function syncViewportHeight() {
+  viewportHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+  document.documentElement.style.setProperty("--stack-screen-height", `${viewportHeight}px`);
+}
+
+function setNavOpen(isOpen) {
+  if (!siteNavToggle || !siteNavPanel) {
+    return;
+  }
+
+  siteNavToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  siteNavPanel.classList.toggle("is-open", isOpen);
+  document.body.classList.toggle("nav-open", isOpen);
+}
+
+function closeNav() {
+  setNavOpen(false);
 }
 
 function setupLoaderBuckets() {
@@ -464,7 +486,7 @@ function updateStackFromScroll() {
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const rawProgress = local / Math.max(1, window.innerHeight);
+  const rawProgress = local / Math.max(1, viewportHeight);
   stackTargetProgress = clamp(rawProgress, 0, stackMaxProgress);
   queueStackMotion();
 
@@ -483,9 +505,9 @@ function snapToNearestSlide() {
 
   const scrollY = window.scrollY || window.pageYOffset || 0;
   const local = scrollY - stackStartOffset;
-  const progress = clamp(local / Math.max(1, window.innerHeight), 0, stackMaxProgress);
+  const progress = clamp(local / Math.max(1, viewportHeight), 0, stackMaxProgress);
   const targetIndex = Math.round(progress);
-  const targetScroll = stackStartOffset + (targetIndex * window.innerHeight);
+  const targetScroll = stackStartOffset + (targetIndex * viewportHeight);
 
   if (Math.abs(targetScroll - scrollY) < 1) {
     return;
@@ -499,7 +521,7 @@ function snapToNearestSlide() {
 }
 
 function updateVimeoScale() {
-  const viewportAspect = window.innerWidth / Math.max(1, window.innerHeight);
+  const viewportAspect = window.innerWidth / Math.max(1, viewportHeight);
   const baseAspect = 16 / 9;
   const scale = Math.max(viewportAspect / baseAspect, baseAspect / viewportAspect);
   vimeoScale = Math.max(1, scale);
@@ -572,6 +594,7 @@ function runIntro() {
 buildStack();
 stackMaxProgress = Math.max(0, slides.length - 1);
 document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
+syncViewportHeight();
 updateVimeoScale();
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
@@ -587,9 +610,44 @@ ensureActiveProjectTitle();
 lastDominantIndex = 0;
 updateStackMotion();
 
+siteNavToggle?.addEventListener("click", () => {
+  const isOpen = siteNavToggle.getAttribute("aria-expanded") !== "true";
+  setNavOpen(isOpen);
+});
+
+siteNavPanel?.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    closeNav();
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeNav();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (!siteNavPanel?.classList.contains("is-open")) {
+    return;
+  }
+
+  const target = event.target;
+  if (!(target instanceof Node)) {
+    return;
+  }
+
+  if (siteNavPanel.contains(target) || siteNavToggle?.contains(target)) {
+    return;
+  }
+
+  closeNav();
+});
+
 window.addEventListener("scroll", updateStackFromScroll, { passive: true });
 window.addEventListener("load", () => {
   window.scrollTo(0, 0);
+  syncViewportHeight();
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   currentStackProgress = 0;
   stackTargetProgress = 0;
@@ -602,6 +660,10 @@ window.addEventListener("load", () => {
 });
 
 window.addEventListener("resize", () => {
+  syncViewportHeight();
+  if (window.innerWidth >= 768) {
+    closeNav();
+  }
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   updateStackFromScroll();
   updateVimeoScale();
