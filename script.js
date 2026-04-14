@@ -72,6 +72,13 @@ let stackStartOffset = 0;
 let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
+let preloadTimer = null;
+let preloadedUntilIndex = -1;
+
+const INITIAL_PRELOAD_COUNT = 4;
+const FORWARD_PRELOAD_COUNT = 4;
+const IDLE_PRELOAD_BATCH = 2;
+const VIDEO_START_OFFSET_SECONDS = 0.5;
 
 function shuffle(list) {
   const copy = [...list];
@@ -99,7 +106,57 @@ function buildVimeoSrc(vimeoId) {
     portrait: "0",
     dnt: "1",
   });
-  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
+  return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}#t=${VIDEO_START_OFFSET_SECONDS}s`;
+}
+
+function getStackFrames() {
+  return Array.from(stackStage?.querySelectorAll("iframe") || []);
+}
+
+function ensureFrameLoaded(frame) {
+  if (!frame || frame.src || !frame.dataset.src) {
+    return;
+  }
+
+  frame.src = frame.dataset.src;
+  frame.loading = "eager";
+}
+
+function preloadFramesThrough(index) {
+  const frames = getStackFrames();
+  const maxIndex = Math.min(index, frames.length - 1);
+
+  for (let frameIndex = Math.max(0, preloadedUntilIndex + 1); frameIndex <= maxIndex; frameIndex += 1) {
+    ensureFrameLoaded(frames[frameIndex]);
+  }
+
+  preloadedUntilIndex = Math.max(preloadedUntilIndex, maxIndex);
+}
+
+function scheduleIdlePreload(startIndex = 0) {
+  if (preloadTimer) {
+    window.clearTimeout(preloadTimer);
+    preloadTimer = null;
+  }
+
+  const frames = getStackFrames();
+  let cursor = Math.max(startIndex, preloadedUntilIndex + 1);
+
+  const tick = () => {
+    const endIndex = Math.min(cursor + IDLE_PRELOAD_BATCH - 1, frames.length - 1);
+    preloadFramesThrough(endIndex);
+    cursor = endIndex + 1;
+
+    if (cursor < frames.length) {
+      preloadTimer = window.setTimeout(tick, 220);
+    } else {
+      preloadTimer = null;
+    }
+  };
+
+  if (cursor < frames.length) {
+    preloadTimer = window.setTimeout(tick, 180);
+  }
 }
 
 function setupLoaderBuckets() {
@@ -255,8 +312,9 @@ function buildStack() {
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
-    if (index < 2) {
+    if (index < INITIAL_PRELOAD_COUNT) {
       iframe.src = iframe.dataset.src;
+      iframe.loading = "eager";
     }
 
     card.appendChild(iframe);
@@ -418,19 +476,17 @@ function updateStackMotion() {
       return;
     }
     const prevIndex = Math.max(0, currentIndex - 1);
-    const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
-    const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
+    const forwardIndex = Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1);
+    const shouldLoad = index >= prevIndex && index <= forwardIndex;
     if (shouldLoad) {
-      if (!frame.src && frame.dataset.src) {
-        frame.src = frame.dataset.src;
-        frame.loading = "eager";
-      }
+      ensureFrameLoaded(frame);
       frame.removeAttribute("data-paused");
     } else if (frame.src) {
-      frame.removeAttribute("src");
       frame.setAttribute("data-paused", "true");
     }
   });
+
+  preloadFramesThrough(Math.min(nextIndex + FORWARD_PRELOAD_COUNT, cardCount - 1));
 }
 
 function stepStackMotion() {
@@ -550,6 +606,7 @@ function runIntro() {
             site.classList.add("is-visible");
             window.scrollTo(0, 0);
             stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
+            scheduleIdlePreload(preloadedUntilIndex + 1);
             window.setTimeout(() => {
               whiteFlash?.classList.remove("is-visible");
             }, 220);
@@ -576,6 +633,8 @@ function runIntro() {
 buildStack();
 stackMaxProgress = Math.max(0, slides.length - 1);
 document.documentElement.style.setProperty("--stack-count", String(slides.length || 1));
+preloadedUntilIndex = INITIAL_PRELOAD_COUNT - 1;
+scheduleIdlePreload(INITIAL_PRELOAD_COUNT);
 updateVimeoScale();
 if ("scrollRestoration" in window.history) {
   window.history.scrollRestoration = "manual";
@@ -603,10 +662,12 @@ window.addEventListener("load", () => {
   updateStackMotion();
   updateStackFromScroll();
   updateVimeoScale();
+  scheduleIdlePreload(preloadedUntilIndex + 1);
 });
 
 window.addEventListener("resize", () => {
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   updateStackFromScroll();
   updateVimeoScale();
+  scheduleIdlePreload(preloadedUntilIndex + 1);
 });
