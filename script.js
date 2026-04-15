@@ -14,7 +14,7 @@ const stackProjectNext = document.querySelector(".stack-project-next");
 const EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 
 const stillAssets = [
-  { type: "image", src: "STILLS/gel_I_v0005_enhanced.tif", alt: "gel study" },
+  { type: "image", src: "STILLS/gel_I_v0005_enhanced copy.jpg", alt: "gel study" },
   { type: "image", src: "STILLS/gel_pack_closeup_B_v0002 copy 2.png", alt: "pack closeup b" },
   { type: "image", src: "STILLS/gel_pack_closeup_C_v0002 copy 2.png", alt: "pack closeup c" },
   { type: "image", src: "STILLS/gel_pack_top_v0002 copy.png", alt: "pack top" },
