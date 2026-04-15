@@ -628,10 +628,14 @@ window.addEventListener("pointermove", (event) => {
   updateFocusField(event.clientX, event.clientY);
 });
 
+window.addEventListener("mousemove", (event) => {
+  updateFocusField(event.clientX, event.clientY);
+});
+
 window.addEventListener("pointerdown", (event) => {
   updateFocusField(event.clientX, event.clientY);
 });
 
-window.addEventListener("mouseleave", () => {
+document.addEventListener("mouseleave", () => {
   focusField?.classList.remove("is-active");
 });

@@ -608,24 +608,24 @@ a {
 }
 
 .focus-blur-soft {
-  backdrop-filter: blur(4px) saturate(0.94);
-  -webkit-backdrop-filter: blur(4px) saturate(0.94);
-  -webkit-mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 7.5rem, rgba(0, 0, 0, 0.12) 9rem, rgba(0, 0, 0, 0.88) 16rem, black 28rem);
-  mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 7.5rem, rgba(0, 0, 0, 0.12) 9rem, rgba(0, 0, 0, 0.88) 16rem, black 28rem);
+  backdrop-filter: blur(3px) saturate(0.96);
+  -webkit-backdrop-filter: blur(3px) saturate(0.96);
+  -webkit-mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.08) 10rem, rgba(0, 0, 0, 0.88) 18rem, black 28rem);
+  mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.08) 10rem, rgba(0, 0, 0, 0.88) 18rem, black 28rem);
 }
 
 .focus-blur-deep {
-  backdrop-filter: blur(10px) brightness(0.94);
-  -webkit-backdrop-filter: blur(10px) brightness(0.94);
-  -webkit-mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.18) 16rem, rgba(0, 0, 0, 0.94) 29rem, black 48rem);
-  mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.18) 16rem, rgba(0, 0, 0, 0.94) 29rem, black 48rem);
+  backdrop-filter: blur(6px) brightness(0.97);
+  -webkit-backdrop-filter: blur(6px) brightness(0.97);
+  -webkit-mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 12rem, rgba(0, 0, 0, 0.1) 18rem, rgba(0, 0, 0, 0.92) 30rem, black 48rem);
+  mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 12rem, rgba(0, 0, 0, 0.1) 18rem, rgba(0, 0, 0, 0.92) 30rem, black 48rem);
 }
 
 .focus-noise {
-  opacity: 0.26;
-  mix-blend-mode: overlay;
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
   background-image:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 58%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
   background-size: 100% 100%, 120px 120px;
   -webkit-mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 9rem, rgba(0, 0, 0, 0.16) 14rem, black 28rem, black 100%);
@@ -633,29 +633,17 @@ a {
 }
 
 .focus-ring {
-  background:
-    radial-gradient(circle 8.5rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.26) 0, rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0) 70%),
-    radial-gradient(circle 12rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0.03) 54%, rgba(255, 255, 255, 0) 74%);
-  opacity: 0.5;
-}
-
-.focus-pointer {
-  position: absolute;
-  left: var(--cursor-x);
-  top: var(--cursor-y);
-  width: 12rem;
-  height: 12rem;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
-    0 0 22px rgba(255, 255, 255, 0.12);
-  opacity: 0.9;
+  display: none;
 }
 
 @media (hover: none), (pointer: coarse) {
   .focus-field {
     display: none;
+  }
+}
+
+@media (min-width: 901px) {
+  .stack-card iframe {
+    pointer-events: none;
   }
 }
