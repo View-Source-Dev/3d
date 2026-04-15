@@ -521,6 +521,8 @@ function updateFocusField(x, y) {
   focusField.classList.add("is-active");
 }
 
+updateFocusField(window.innerWidth * 0.5, window.innerHeight * 0.5);
+
 function runIntro() {
   if (!loader || !loaderFrame || !loaderImage || !loaderBar || !site) {
     site?.classList.add("is-visible");
