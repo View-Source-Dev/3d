@@ -376,7 +376,7 @@ function updateStackMotion() {
     let zIndex = 1;
 
     if (index === currentIndex) {
-      translateY = 0;
+      translateY = nextIndex === currentIndex ? 0 : -(eased * 14);
       zIndex = 2;
     }
 
@@ -385,7 +385,7 @@ function updateStackMotion() {
       zIndex = 3;
     }
 
-    if (translateY < 2.2) {
+    if (translateY > -2.2 && translateY < 2.2) {
       translateY = 0;
     }
 
