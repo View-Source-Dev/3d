@@ -339,7 +339,7 @@ a {
   width: min(56vw, 44rem);
   height: auto;
   filter: saturate(0) grayscale(1) invert(1);
-  opacity: 1;
+  opacity: 0.9;
   transform: none;
 }
 
@@ -365,7 +365,7 @@ a {
   line-height: 0.96;
   letter-spacing: -0.05em;
   text-align: right;
-  opacity: 0;
+  opacity: 0.9;
   transform: translate3d(-12vw, 0, 0);
   animation: overlayProjectSplit 1500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: 1500ms;
