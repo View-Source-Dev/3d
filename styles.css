@@ -21,6 +21,8 @@
   --line: rgba(18, 18, 16, 0.12);
   --page-pad: 1.125rem;
   --grid-gap: 1rem;
+  --cursor-x: 50vw;
+  --cursor-y: 50vh;
 }
 
 * {
@@ -578,4 +580,67 @@ a {
 
 .contact-email {
   font-weight: 600;
+}
+
+.focus-field {
+  position: fixed;
+  inset: 0;
+  z-index: 26;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.focus-field.is-active {
+  opacity: 1;
+}
+
+.focus-blur,
+.focus-noise,
+.focus-ring {
+  position: absolute;
+  inset: 0;
+}
+
+.focus-blur {
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+
+.focus-blur-soft {
+  backdrop-filter: blur(2px) saturate(0.96);
+  -webkit-backdrop-filter: blur(2px) saturate(0.96);
+  -webkit-mask-image: radial-gradient(circle 15rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.18) 10rem, rgba(0, 0, 0, 0.85) 17rem, black 26rem);
+  mask-image: radial-gradient(circle 15rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.18) 10rem, rgba(0, 0, 0, 0.85) 17rem, black 26rem);
+}
+
+.focus-blur-deep {
+  backdrop-filter: blur(6px) brightness(0.96);
+  -webkit-backdrop-filter: blur(6px) brightness(0.96);
+  -webkit-mask-image: radial-gradient(circle 28rem at var(--cursor-x) var(--cursor-y), transparent 0 13rem, rgba(0, 0, 0, 0.12) 18rem, rgba(0, 0, 0, 0.88) 28rem, black 46rem);
+  mask-image: radial-gradient(circle 28rem at var(--cursor-x) var(--cursor-y), transparent 0 13rem, rgba(0, 0, 0, 0.12) 18rem, rgba(0, 0, 0, 0.88) 28rem, black 46rem);
+}
+
+.focus-noise {
+  opacity: 0.14;
+  mix-blend-mode: soft-light;
+  background-image:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0) 58%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 160px 160px;
+  -webkit-mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.2) 18rem, black 34rem, black 100%);
+  mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.2) 18rem, black 34rem, black 100%);
+}
+
+.focus-ring {
+  background:
+    radial-gradient(circle 9rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.16) 0, rgba(255, 255, 255, 0.06) 62%, rgba(255, 255, 255, 0) 72%),
+    radial-gradient(circle 14rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.02) 58%, rgba(255, 255, 255, 0) 76%);
+  opacity: 0.3;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .focus-field {
+    display: none;
+  }
 }
