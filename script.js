@@ -167,9 +167,13 @@ function startVideoWarmup() {
       return;
     }
 
-    ensureFrameLoaded(state.cards[state.warmupIndex]);
+    const card = state.cards[state.warmupIndex];
+    const frame = ensureFrameLoaded(card);
+    if (frame?.src) {
+      postToVimeo(frame, "play");
+    }
     state.warmupIndex += 1;
-    state.warmupTimer = window.setTimeout(warmNext, 220);
+    state.warmupTimer = window.setTimeout(warmNext, 90);
   };
 
   warmNext();
@@ -194,11 +198,7 @@ function syncPlaybackWindow(centerIndex) {
       return;
     }
 
-    if (index === centerIndex) {
-      postToVimeo(frame, "play");
-    } else {
-      postToVimeo(frame, "pause");
-    }
+    postToVimeo(frame, "play");
   });
 }
 
@@ -220,11 +220,7 @@ function syncPlaybackProgress(currentIndex, nextIndex, fraction) {
       return;
     }
 
-    if (playing.has(index)) {
-      postToVimeo(frame, "play");
-    } else {
-      postToVimeo(frame, "pause");
-    }
+    postToVimeo(frame, "play");
   });
 }
 
@@ -261,20 +257,20 @@ function updateDesktopCards(progress) {
   if (currentCard) {
     currentCard.style.opacity = "1";
     currentCard.style.zIndex = "2";
-    currentCard.style.transform = `translate3d(${fraction * 2.8}%, 0, 0) scale(${1 - fraction * 0.01})`;
+    currentCard.style.transform = `translate3d(${fraction * 10.5}%, 0, 0) scale(${1 - fraction * 0.036})`;
   }
 
   if (nextCard) {
     nextCard.style.opacity = "1";
     nextCard.style.zIndex = "3";
     nextCard.style.clipPath = `inset(0 ${Math.max(0, (1 - fraction) * 100)}% 0 0)`;
-    nextCard.style.transform = `translate3d(${-5.6 + fraction * 5.6}%, 0, 0) scale(${1.03 - fraction * 0.03})`;
+    nextCard.style.transform = `translate3d(${-21 + fraction * 21}%, 0, 0) scale(${1.12 - fraction * 0.12})`;
   }
 
   if (prevCard && fraction < 0.015) {
     prevCard.style.opacity = "1";
     prevCard.style.zIndex = "1";
-    prevCard.style.transform = "translate3d(-1.5%, 0, 0) scale(1.01)";
+    prevCard.style.transform = "translate3d(-6%, 0, 0) scale(1.045)";
   }
 
   if (stackOverlay) {
@@ -575,14 +571,11 @@ function buildStack() {
     iframe.className = "stack-video";
     iframe.dataset.src = buildVimeoSrc(asset.vimeoId);
     iframe.title = asset.name;
-    iframe.loading = index < 4 ? "eager" : "lazy";
+    iframe.loading = "eager";
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
-
-    if (index < 4) {
-      iframe.src = iframe.dataset.src;
-    }
+    iframe.src = iframe.dataset.src;
 
     card.appendChild(iframe);
     fragment.appendChild(card);
