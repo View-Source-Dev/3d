@@ -585,10 +585,10 @@ a {
 .focus-field {
   position: fixed;
   inset: 0;
-  z-index: 26;
+  z-index: 40;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 180ms ease;
+  transition: opacity 120ms ease;
 }
 
 .focus-field.is-active {
@@ -608,35 +608,50 @@ a {
 }
 
 .focus-blur-soft {
-  backdrop-filter: blur(2px) saturate(0.96);
-  -webkit-backdrop-filter: blur(2px) saturate(0.96);
-  -webkit-mask-image: radial-gradient(circle 15rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.18) 10rem, rgba(0, 0, 0, 0.85) 17rem, black 26rem);
-  mask-image: radial-gradient(circle 15rem at var(--cursor-x) var(--cursor-y), transparent 0 8rem, rgba(0, 0, 0, 0.18) 10rem, rgba(0, 0, 0, 0.85) 17rem, black 26rem);
+  backdrop-filter: blur(4px) saturate(0.94);
+  -webkit-backdrop-filter: blur(4px) saturate(0.94);
+  -webkit-mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 7.5rem, rgba(0, 0, 0, 0.12) 9rem, rgba(0, 0, 0, 0.88) 16rem, black 28rem);
+  mask-image: radial-gradient(circle 16rem at var(--cursor-x) var(--cursor-y), transparent 0 7.5rem, rgba(0, 0, 0, 0.12) 9rem, rgba(0, 0, 0, 0.88) 16rem, black 28rem);
 }
 
 .focus-blur-deep {
-  backdrop-filter: blur(6px) brightness(0.96);
-  -webkit-backdrop-filter: blur(6px) brightness(0.96);
-  -webkit-mask-image: radial-gradient(circle 28rem at var(--cursor-x) var(--cursor-y), transparent 0 13rem, rgba(0, 0, 0, 0.12) 18rem, rgba(0, 0, 0, 0.88) 28rem, black 46rem);
-  mask-image: radial-gradient(circle 28rem at var(--cursor-x) var(--cursor-y), transparent 0 13rem, rgba(0, 0, 0, 0.12) 18rem, rgba(0, 0, 0, 0.88) 28rem, black 46rem);
+  backdrop-filter: blur(10px) brightness(0.94);
+  -webkit-backdrop-filter: blur(10px) brightness(0.94);
+  -webkit-mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.18) 16rem, rgba(0, 0, 0, 0.94) 29rem, black 48rem);
+  mask-image: radial-gradient(circle 34rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.18) 16rem, rgba(0, 0, 0, 0.94) 29rem, black 48rem);
 }
 
 .focus-noise {
-  opacity: 0.14;
-  mix-blend-mode: soft-light;
+  opacity: 0.26;
+  mix-blend-mode: overlay;
   background-image:
-    radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0) 58%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' seed='7'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-size: 100% 100%, 160px 160px;
-  -webkit-mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.2) 18rem, black 34rem, black 100%);
-  mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 11rem, rgba(0, 0, 0, 0.2) 18rem, black 34rem, black 100%);
+  background-size: 100% 100%, 120px 120px;
+  -webkit-mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 9rem, rgba(0, 0, 0, 0.16) 14rem, black 28rem, black 100%);
+  mask-image: radial-gradient(circle 30rem at var(--cursor-x) var(--cursor-y), transparent 0 9rem, rgba(0, 0, 0, 0.16) 14rem, black 28rem, black 100%);
 }
 
 .focus-ring {
   background:
-    radial-gradient(circle 9rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.16) 0, rgba(255, 255, 255, 0.06) 62%, rgba(255, 255, 255, 0) 72%),
-    radial-gradient(circle 14rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.02) 58%, rgba(255, 255, 255, 0) 76%);
-  opacity: 0.3;
+    radial-gradient(circle 8.5rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.26) 0, rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(circle 12rem at var(--cursor-x) var(--cursor-y), rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0.03) 54%, rgba(255, 255, 255, 0) 74%);
+  opacity: 0.5;
+}
+
+.focus-pointer {
+  position: absolute;
+  left: var(--cursor-x);
+  top: var(--cursor-y);
+  width: 12rem;
+  height: 12rem;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 22px rgba(255, 255, 255, 0.12);
+  opacity: 0.9;
 }
 
 @media (hover: none), (pointer: coarse) {
