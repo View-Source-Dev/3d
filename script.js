@@ -8,7 +8,6 @@ const loaderBuckets = document.querySelector("#loaderBuckets");
 const loaderBarFill = document.querySelector(".loader-bar-fill");
 const whiteFlash = document.querySelector("#whiteFlash");
 const site = document.querySelector(".site");
-const focusField = document.querySelector("#focusField");
 const stackProjectName = document.querySelector("#stackProjectName");
 const stackProjectCurrent = document.querySelector(".stack-project-current");
 const stackProjectNext = document.querySelector(".stack-project-next");
@@ -511,18 +510,6 @@ function updateVimeoScale() {
   document.documentElement.style.setProperty("--vimeo-scale", vimeoScale.toFixed(4));
 }
 
-function updateFocusField(x, y) {
-  if (!focusField) {
-    return;
-  }
-
-  document.documentElement.style.setProperty("--cursor-x", `${x}px`);
-  document.documentElement.style.setProperty("--cursor-y", `${y}px`);
-  focusField.classList.add("is-active");
-}
-
-updateFocusField(window.innerWidth * 0.5, window.innerHeight * 0.5);
-
 function runIntro() {
   if (!loader || !loaderFrame || !loaderImage || !loaderBar || !site) {
     site?.classList.add("is-visible");
@@ -622,20 +609,4 @@ window.addEventListener("resize", () => {
   stackStartOffset = stackStage?.getBoundingClientRect().top + window.scrollY;
   updateStackFromScroll();
   updateVimeoScale();
-});
-
-window.addEventListener("pointermove", (event) => {
-  updateFocusField(event.clientX, event.clientY);
-});
-
-window.addEventListener("mousemove", (event) => {
-  updateFocusField(event.clientX, event.clientY);
-});
-
-window.addEventListener("pointerdown", (event) => {
-  updateFocusField(event.clientX, event.clientY);
-});
-
-document.addEventListener("mouseleave", () => {
-  focusField?.classList.remove("is-active");
 });
