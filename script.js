@@ -41,7 +41,7 @@ const stillAssets = [
 const slides = [
   { name: "Cadence", vimeoId: "1182987379" },
   { name: "Cadence", vimeoId: "1182987381" },
-  { name: "Direction & CGI Production", vimeoId: "1182999637" },
+  { name: "Direction & CGI Production", vimeoId: "1183630498" },
   { name: "Direction & CGI Production", vimeoId: "1182987682" },
   { name: "Louis Vuitton", vimeoId: "1183003548" },
   { name: "Givenchy", vimeoId: "1182987619" },

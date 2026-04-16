@@ -66,7 +66,7 @@ a {
   width: fit-content;
   padding: 0.5rem 0.95rem;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 0;
   color: var(--muted);
   transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
 }
