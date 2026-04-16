@@ -73,6 +73,10 @@ let vimeoScale = 1;
 let scrollSnapTimer = null;
 let isSnapping = false;
 
+function isMobileStackMode() {
+  return document.documentElement.classList.contains("mobile-stack-mode");
+}
+
 function shuffle(list) {
   const copy = [...list];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -355,7 +359,7 @@ function transitionProjectTitle(targetIndex) {
 }
 
 function updateStackMotion() {
-  if (!stackStage) {
+  if (!stackStage || isMobileStackMode()) {
     return;
   }
 
@@ -458,7 +462,7 @@ function queueStackMotion() {
 }
 
 function updateStackFromScroll() {
-  if (!site?.classList.contains("is-visible")) {
+  if (!site?.classList.contains("is-visible") || isMobileStackMode()) {
     return;
   }
 
@@ -481,7 +485,7 @@ function updateStackFromScroll() {
 }
 
 function snapToNearestSlide() {
-  if (isSnapping || !site?.classList.contains("is-visible")) {
+  if (isSnapping || !site?.classList.contains("is-visible") || isMobileStackMode()) {
     return;
   }
 

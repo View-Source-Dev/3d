@@ -1,7 +1,13 @@
 @media (max-width: 900px) {
   html,
   body {
-    scroll-snap-type: y proximity;
+    scroll-behavior: auto;
+    scroll-snap-type: y mandatory;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    touch-action: pan-y;
   }
 
   .stack {
@@ -77,6 +83,7 @@
     gap: 0.85rem;
     padding: 0 1rem 1.1rem;
     background: #000;
+    scroll-padding-top: 0.8rem;
   }
 
   .stack-card {
@@ -89,6 +96,7 @@
     transform: none !important;
     transition: none;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .stack-card iframe,

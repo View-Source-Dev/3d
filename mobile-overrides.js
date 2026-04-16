@@ -2,16 +2,57 @@
   const isMobileLayout = () => window.matchMedia('(max-width: 900px)').matches;
 
   let observer = null;
+  let snapTimer = null;
+
+  function updateMobileMode() {
+    document.documentElement.classList.toggle('mobile-stack-mode', isMobileLayout());
+  }
 
   function teardownObserver() {
     if (observer) {
       observer.disconnect();
       observer = null;
     }
+    if (snapTimer) {
+      window.clearTimeout(snapTimer);
+      snapTimer = null;
+    }
+  }
+
+  function scheduleSnap() {
+    if (!isMobileLayout()) {
+      return;
+    }
+
+    if (snapTimer) {
+      window.clearTimeout(snapTimer);
+    }
+
+    snapTimer = window.setTimeout(() => {
+      const cards = Array.from(document.querySelectorAll('.stack-card'));
+      if (!cards.length) {
+        return;
+      }
+
+      const targetCard = cards.reduce((closest, card) => {
+        const rect = card.getBoundingClientRect();
+        const score = Math.abs(rect.top);
+        if (!closest || score < closest.score) {
+          return { card, score };
+        }
+        return closest;
+      }, null);
+
+      targetCard?.card?.scrollIntoView({
+        block: 'start',
+        behavior: 'auto',
+      });
+    }, 90);
   }
 
   function setupObserver() {
     teardownObserver();
+    updateMobileMode();
     if (!isMobileLayout()) {
       return;
     }
@@ -52,6 +93,8 @@
     cards.forEach((card) => observer.observe(card));
   }
 
+  updateMobileMode();
   window.addEventListener('load', setupObserver);
   window.addEventListener('resize', setupObserver);
+  window.addEventListener('scroll', scheduleSnap, { passive: true });
 })();
