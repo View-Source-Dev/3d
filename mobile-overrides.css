@@ -1,0 +1,102 @@
+@media (max-width: 900px) {
+  html,
+  body {
+    scroll-snap-type: y proximity;
+  }
+
+  .stack {
+    min-height: auto;
+    padding-bottom: 0;
+    background: #000;
+  }
+
+  .stack-pin {
+    position: relative;
+    top: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .stack-spacer {
+    display: none;
+  }
+
+  .stack-overlay {
+    position: relative;
+    inset: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    align-items: start;
+    padding: 1rem 1rem 0.8rem;
+    min-height: 0;
+    background: #000;
+  }
+
+  .stack-overlay-copy {
+    gap: 0.45rem;
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .stack-overlay-logo {
+    width: min(70vw, 20rem);
+  }
+
+  .stack-overlay-text {
+    font-size: clamp(1rem, 4.2vw, 1.45rem);
+    max-width: 16ch;
+  }
+
+  .stack-overlay-project {
+    width: auto;
+    min-height: 0;
+    justify-self: start;
+    text-align: left;
+    font-size: clamp(1.85rem, 8vw, 2.9rem);
+    opacity: 0.9;
+    transform: none;
+    animation: none;
+  }
+
+  .stack-project-current,
+  .stack-project-next {
+    position: relative;
+    inset: auto;
+    transform: none;
+  }
+
+  .stack-project-next {
+    display: none;
+  }
+
+  .stack-stage {
+    height: auto;
+    display: grid;
+    gap: 0.85rem;
+    padding: 0 1rem 1.1rem;
+    background: #000;
+  }
+
+  .stack-card {
+    position: relative;
+    inset: auto;
+    top: auto;
+    height: min(78svh, 32rem);
+    border-radius: 1rem;
+    overflow: hidden;
+    transform: none !important;
+    transition: none;
+    scroll-snap-align: start;
+  }
+
+  .stack-card iframe,
+  .stack-card video {
+    transform: none !important;
+  }
+
+  .contact-footer {
+    padding-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+  }
+}
