@@ -322,6 +322,39 @@ a {
   pointer-events: none;
 }
 
+.stack-clocks {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  color: rgba(255, 255, 255, 0.88);
+  transform: translateX(-50%);
+}
+
+.stack-clock {
+  display: grid;
+  gap: 0.18rem;
+  justify-items: center;
+  min-width: 4.75rem;
+}
+
+.stack-clock-city {
+  font-size: 0.68rem;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.stack-clock-time {
+  font-size: 0.92rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
 .stack-overlay-copy {
   display: grid;
   justify-items: start;
@@ -525,6 +558,10 @@ a {
     padding: 1.1rem;
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .stack-clocks {
+    display: none;
   }
 
   .stack-overlay-copy {
