@@ -305,9 +305,7 @@ function buildStack() {
 
     const iframe = document.createElement("iframe");
     iframe.className = "stack-video";
-    iframe.dataset.src = buildVimeoSrc(asset.vimeoId, {
-      startTime: index === 0 ? 4 : 0,
-    });
+    iframe.dataset.src = buildVimeoSrc(asset.vimeoId);
     iframe.title = asset.name;
     iframe.loading = "lazy";
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
