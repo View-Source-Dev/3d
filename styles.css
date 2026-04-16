@@ -569,11 +569,22 @@ a {
 
 .contact-footer a {
   margin: 0;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
   font-size: clamp(0.95rem, 1.4vw, 1.2rem);
   letter-spacing: 0.04em;
   text-transform: none;
   text-decoration: none;
   color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.contact-footer a:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.42);
+  transform: translateY(-1px);
 }
 
 .contact-email {
