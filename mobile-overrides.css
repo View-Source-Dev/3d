@@ -90,7 +90,9 @@
     position: relative;
     inset: auto;
     top: auto;
-    height: min(78svh, 32rem);
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
     border-radius: 1rem;
     overflow: hidden;
     transform: none !important;

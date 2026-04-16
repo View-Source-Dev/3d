@@ -3,9 +3,30 @@
 
   let observer = null;
   let snapTimer = null;
+  let autoRollTimer = null;
+  let userPauseTimer = null;
+  let activeCardIndex = 0;
+
+  function getCards() {
+    return Array.from(document.querySelectorAll('.stack-card'));
+  }
 
   function updateMobileMode() {
     document.documentElement.classList.toggle('mobile-stack-mode', isMobileLayout());
+  }
+
+  function clearAutoRoll() {
+    if (autoRollTimer) {
+      window.clearInterval(autoRollTimer);
+      autoRollTimer = null;
+    }
+  }
+
+  function clearUserPause() {
+    if (userPauseTimer) {
+      window.clearTimeout(userPauseTimer);
+      userPauseTimer = null;
+    }
   }
 
   function teardownObserver() {
@@ -17,6 +38,8 @@
       window.clearTimeout(snapTimer);
       snapTimer = null;
     }
+    clearAutoRoll();
+    clearUserPause();
   }
 
   function scheduleSnap() {
@@ -29,7 +52,7 @@
     }
 
     snapTimer = window.setTimeout(() => {
-      const cards = Array.from(document.querySelectorAll('.stack-card'));
+      const cards = getCards();
       if (!cards.length) {
         return;
       }
@@ -43,11 +66,48 @@
         return closest;
       }, null);
 
+      if (targetCard) {
+        activeCardIndex = cards.indexOf(targetCard.card);
+      }
+
       targetCard?.card?.scrollIntoView({
         block: 'start',
-        behavior: 'auto',
+        behavior: 'smooth',
       });
     }, 90);
+  }
+
+  function startAutoRoll() {
+    clearAutoRoll();
+    if (!isMobileLayout()) {
+      return;
+    }
+
+    autoRollTimer = window.setInterval(() => {
+      const cards = getCards();
+      if (!cards.length) {
+        return;
+      }
+
+      const nextIndex = (activeCardIndex + 1) % cards.length;
+      activeCardIndex = nextIndex;
+      cards[nextIndex].scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
+    }, 4200);
+  }
+
+  function pauseAutoRoll() {
+    if (!isMobileLayout()) {
+      return;
+    }
+
+    clearAutoRoll();
+    clearUserPause();
+    userPauseTimer = window.setTimeout(() => {
+      startAutoRoll();
+    }, 7000);
   }
 
   function setupObserver() {
@@ -77,6 +137,7 @@
         }
 
         if (entry.isIntersecting && entry.intersectionRatio > 0.55) {
+          activeCardIndex = cards.indexOf(card);
           frame.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), 'https://player.vimeo.com');
           if (currentTitle) {
             currentTitle.textContent = card.dataset.projectName || '';
@@ -91,10 +152,13 @@
     });
 
     cards.forEach((card) => observer.observe(card));
+    startAutoRoll();
   }
 
   updateMobileMode();
   window.addEventListener('load', setupObserver);
   window.addEventListener('resize', setupObserver);
   window.addEventListener('scroll', scheduleSnap, { passive: true });
+  window.addEventListener('touchstart', pauseAutoRoll, { passive: true });
+  window.addEventListener('pointerdown', pauseAutoRoll, { passive: true });
 })();
