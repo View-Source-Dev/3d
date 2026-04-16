@@ -77,6 +77,10 @@ function isMobileStackMode() {
   return document.documentElement.classList.contains("mobile-stack-mode");
 }
 
+function isMobileViewport() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
 function shuffle(list) {
   const copy = [...list];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -103,6 +107,10 @@ function buildVimeoSrc(vimeoId) {
     portrait: "0",
     dnt: "1",
   });
+  if (isMobileViewport()) {
+    // Ask Vimeo for a lighter initial stream on phones; unsupported values are ignored.
+    params.set("quality", "540p");
+  }
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}`;
 }
 
@@ -259,8 +267,9 @@ function buildStack() {
     iframe.allow = "autoplay; fullscreen; picture-in-picture";
     iframe.setAttribute("allowfullscreen", "true");
     iframe.setAttribute("aria-label", asset.name);
-    if (index < 2) {
+    if (index < (isMobileViewport() ? 5 : 2)) {
       iframe.src = iframe.dataset.src;
+      iframe.loading = "eager";
     }
 
     card.appendChild(iframe);
