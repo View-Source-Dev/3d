@@ -80,20 +80,7 @@ a {
 .contact-hero-copy {
   display: grid;
   gap: 0.9rem;
-  max-width: 100%;
-}
-
-.contact-email-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: baseline;
-  gap: 1.5rem;
-  width: 100%;
-}
-
-.contact-email-row .contact-email:last-child {
-  justify-self: end;
-  text-align: right;
+  max-width: 48rem;
 }
 
 .contact-kicker,
@@ -173,6 +160,15 @@ a {
   font-size: 0.98rem;
 }
 
+.leader-email {
+  width: fit-content;
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
 .leadership-notes {
   display: grid;
   gap: 0.85rem;
@@ -205,15 +201,6 @@ a {
 
   .contact-hero {
     gap: 3rem;
-  }
-
-  .contact-email-row {
-    grid-template-columns: 1fr;
-  }
-
-  .contact-email-row .contact-email:last-child {
-    justify-self: start;
-    text-align: left;
   }
 }
 
