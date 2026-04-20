@@ -47,9 +47,17 @@
         return;
       }
 
-      if (Math.abs(index - centerIndex) <= 3 && !frame.src) {
+      const distance = Math.abs(index - centerIndex);
+
+      if (distance <= 1 && !frame.src) {
         frame.src = frame.dataset.src;
         frame.loading = 'eager';
+      }
+
+      if (distance > 2 && frame.src) {
+        frame.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), 'https://player.vimeo.com');
+        frame.removeAttribute('src');
+        frame.dataset.playState = 'paused';
       }
     });
   }
@@ -160,11 +168,13 @@
           activeCardIndex = cards.indexOf(card);
           primeNearbyFrames(cards, activeCardIndex);
           frame.contentWindow?.postMessage(JSON.stringify({ method: 'play' }), 'https://player.vimeo.com');
+          frame.dataset.playState = 'playing';
           if (currentTitle) {
             currentTitle.textContent = card.dataset.projectName || '';
           }
         } else if (frame.src) {
           frame.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), 'https://player.vimeo.com');
+          frame.dataset.playState = 'paused';
         }
       });
     }, {

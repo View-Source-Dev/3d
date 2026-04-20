@@ -44,11 +44,9 @@ const slides = [
   { name: "Cadence", vimeoId: "1182987381" },
   { name: "Direction & CGI Production", vimeoId: "1183630498" },
   { name: "Direction & CGI Production", vimeoId: "1182987682" },
-  { name: "Louis Vuitton", vimeoId: "1183003548" },
   { name: "Givenchy", vimeoId: "1182987619" },
   { name: "Byredo", vimeoId: "1182987608" },
   { name: "Club", vimeoId: "1183017503" },
-  { name: "L'Or\u00e9al", vimeoId: "1182987487" },
   { name: "Bandit", vimeoId: "1182987377" },
   { name: "Sandro", vimeoId: "1182988010" },
   { name: "Sandro", vimeoId: "1182987807" },
@@ -98,7 +96,7 @@ function clamp(value, min, max) {
 
 function buildVimeoSrc(vimeoId, options = {}) {
   const params = new URLSearchParams({
-    autoplay: "1",
+    autoplay: options.autoplay ? "1" : "0",
     muted: "1",
     loop: "1",
     background: "1",
@@ -118,6 +116,18 @@ function buildVimeoSrc(vimeoId, options = {}) {
   const startFragment = startTime > 0 ? `#t=${startTime}s` : "";
 
   return `https://player.vimeo.com/video/${vimeoId}?${params.toString()}${startFragment}`;
+}
+
+function setFramePlayback(frame, shouldPlay) {
+  if (!frame?.contentWindow) {
+    return;
+  }
+
+  frame.contentWindow.postMessage(
+    JSON.stringify({ method: shouldPlay ? "play" : "pause" }),
+    "https://player.vimeo.com",
+  );
+  frame.dataset.playState = shouldPlay ? "playing" : "paused";
 }
 
 function updateClocks() {
@@ -314,6 +324,7 @@ function buildStack() {
     if (index < (isMobileViewport() ? 5 : 2)) {
       iframe.src = iframe.dataset.src;
       iframe.loading = "eager";
+      iframe.dataset.playState = "paused";
     }
 
     card.appendChild(iframe);
@@ -477,17 +488,33 @@ function updateStackMotion() {
     const prevIndex = Math.max(0, currentIndex - 1);
     const nextNextIndex = Math.min(nextIndex + 1, cardCount - 1);
     const shouldLoad = index === currentIndex || index === nextIndex || index === prevIndex || index === nextNextIndex;
+    const isVisibleInFrame = translateCardIntoVisibility(index, currentIndex, nextIndex, eased);
     if (shouldLoad) {
       if (!frame.src && frame.dataset.src) {
         frame.src = frame.dataset.src;
         frame.loading = "eager";
       }
-      frame.removeAttribute("data-paused");
+      setFramePlayback(frame, isVisibleInFrame);
     } else if (frame.src) {
+      setFramePlayback(frame, false);
       frame.removeAttribute("src");
-      frame.setAttribute("data-paused", "true");
+      frame.dataset.playState = "paused";
     }
   });
+}
+
+function translateCardIntoVisibility(index, currentIndex, nextIndex, eased) {
+  let translateY = 100;
+
+  if (index === currentIndex) {
+    translateY = nextIndex === currentIndex ? 0 : -(eased * 14);
+  }
+
+  if (index === nextIndex) {
+    translateY = (1 - eased) * 100;
+  }
+
+  return translateY < 99 && translateY > -99;
 }
 
 function stepStackMotion() {
