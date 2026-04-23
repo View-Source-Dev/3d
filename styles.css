@@ -316,7 +316,6 @@ a {
   bottom: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(180px, auto);
   align-items: center;
   padding: 1.5rem;
   pointer-events: none;
@@ -387,49 +386,7 @@ a {
   transform: none;
 }
 
-.stack-overlay-project {
-  position: relative;
-  margin: 0;
-  min-height: 1em;
-  width: min(36vw, 26rem);
-  justify-self: end;
-  color: #fff;
-  font-size: clamp(2.3rem, 3.8vw, 4.3rem);
-  font-weight: 600;
-  line-height: 0.96;
-  letter-spacing: -0.05em;
-  text-align: right;
-  opacity: 0;
-  transform: translate3d(-12vw, 0, 0);
-  animation: overlayProjectSplit 1500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 1500ms;
-  animation-fill-mode: both;
-  animation-play-state: paused;
-}
-
-.stack-project-current,
-.stack-project-next {
-  position: absolute;
-  inset: 0;
-  display: block;
-  transition: none;
-  will-change: opacity, transform;
-}
-
-.stack-project-current {
-  opacity: var(--project-opacity-current, 1);
-  visibility: var(--project-visibility-current, visible);
-  transform: translateY(var(--project-shift-current, 0));
-}
-
-.stack-project-next {
-  opacity: var(--project-opacity-next, 0);
-  visibility: var(--project-visibility-next, hidden);
-  transform: translateY(var(--project-shift-next, 14px));
-}
-
-.site.is-visible .stack-overlay-copy,
-.site.is-visible .stack-overlay-project {
+.site.is-visible .stack-overlay-copy {
   animation-play-state: running;
 }
 
@@ -558,7 +515,6 @@ a {
 
   .stack-overlay {
     padding: 1.1rem;
-    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -572,12 +528,6 @@ a {
 
   .stack-overlay-logo {
     width: min(72vw, 24rem);
-  }
-
-  .stack-overlay-project {
-    justify-self: start;
-    text-align: left;
-    width: auto;
   }
 
   .stack-card {

@@ -44,8 +44,13 @@ const slides = [
   { name: "Cadence", vimeoId: "1182987381" },
   { name: "Direction & CGI Production", vimeoId: "1183630498" },
   { name: "Direction & CGI Production", vimeoId: "1182987682" },
+  { name: "L'Or\u00e9al", vimeoId: "1182991509" },
+  { name: "L'Or\u00e9al", vimeoId: "1182987487" },
   { name: "Club", vimeoId: "1183017503" },
   { name: "Bandit", vimeoId: "1182987377" },
+  { name: "Sandro", vimeoId: "1182987807" },
+  { name: "Sandro", vimeoId: "1182988010" },
+  { name: "Moonbeam", vimeoId: "1182987776" },
   { name: "Icon", vimeoId: "1183004855" },
   { name: "Icon", vimeoId: "1182987816" },
   { name: "Lab", vimeoId: "1182987729" },
@@ -342,6 +347,10 @@ function setTitleState(currentOpacity, nextOpacity, currentShift, nextShift, cur
 }
 
 function ensureActiveProjectTitle() {
+  if (!stackProjectCurrent && !stackProjectNext) {
+    return;
+  }
+
   if (stackProjectCurrent) {
     stackProjectCurrent.textContent = projectNames[activeProjectIndex] || "";
   }
